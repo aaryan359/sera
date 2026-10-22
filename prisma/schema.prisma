@@ -1,0 +1,377 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id          String   @id @default(uuid())
+  email       String   @unique
+  name        String?
+  // Null for seeded local users until real authentication is connected.
+  authSubject String?  @unique
+  timezone    String   @default("UTC")
+  locale      String   @default("en")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  conversations Conversation[]
+  connections   Connection[]
+  runs          Run[]
+}
+
+// A Sera conversation is distinct from a Gmail thread.
+model Conversation {
+  id        String   @id @default(uuid())
+  userId    String
+  title     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user     User      @relation(fields: [userId], references: [id], onDelete: Restrict)
+  messages Message[]
+  runs     Run[]
+
+  // Lets Run enforce that its conversation belongs to the same user.
+  @@unique([id, userId])
+  @@index([userId, updatedAt])
+}
+
+model Message {
+  id             String      @id @default(uuid())
+  conversationId String
+  role           MessageRole
+  content        String      @db.Text
+  createdAt      DateTime    @default(now())
+
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Restrict)
+  requestRun   Run?
+
+  // Lets Run enforce that the request message belongs to its conversation.
+  @@unique([id, conversationId])
+  @@index([conversationId, createdAt])
+}
+
+model Connection {
+  id                String             @id @default(uuid())
+  userId            String
+  provider          String
+  providerAccountId String
+  status            ConnectionStatus   @default(ACTIVE)
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+
+  user       User                  @relation(fields: [userId], references: [id], onDelete: Restrict)
+  scopes     ConnectionScope[]
+  credential ConnectionCredential?
+  runLinks   RunConnection[]
+  toolGrants ToolGrant[]
+
+  // A provider account cannot be silently assigned to multiple Sera users.
+  @@unique([provider, providerAccountId])
+  @@unique([id, userId])
+  @@index([userId, status])
+}
+
+// Scopes are separate rows, not a repeating list on Connection.
+model ConnectionScope {
+  connectionId String
+  scope        String
+
+  connection Connection @relation(fields: [connectionId], references: [id], onDelete: Cascade)
+
+  @@id([connectionId, scope])
+}
+
+// User-consented tool capability on a specific connected account. Revocation
+// takes effect immediately; it never grants permission on a different account.
+model ToolGrant {
+  connectionId String
+  toolName     String
+  toolVersion  Int
+  status       ToolGrantStatus @default(ACTIVE)
+  grantedAt    DateTime        @default(now())
+  expiresAt    DateTime?
+  revokedAt    DateTime?
+
+  connection Connection @relation(fields: [connectionId], references: [id], onDelete: Restrict)
+
+  @@id([connectionId, toolName, toolVersion])
+}
+
+// Only real provider connections have a credential. Never return this model to a client.
+model ConnectionCredential {
+  connectionId          String    @id
+  encryptedRefreshToken String    @db.Text
+  encryptionKeyVersion  String
+  tokenExpiresAt        DateTime?
+  updatedAt             DateTime  @updatedAt
+
+  connection Connection @relation(fields: [connectionId], references: [id], onDelete: Cascade)
+}
+
+model Run {
+  id               String    @id @default(uuid())
+  userId           String
+  conversationId   String
+  requestMessageId String
+  intent           String?
+  status           RunStatus @default(QUEUED)
+  // Worker retries are separate from the Actor's pre-write Trial count.
+  retryCount       Int       @default(0)
+  maxRetries       Int       @default(3)
+  stateVersion     Int       @default(0)
+  statusChangedAt  DateTime  @default(now())
+  nextAttemptAt    DateTime?
+  leaseOwner       String?
+  leaseExpiresAt   DateTime?
+  lastHeartbeatAt  DateTime?
+  // Snapshots are bounded, validated inputs for this run, not a durable user memory store.
+  goal             Json?
+  contextSnapshot  Json?
+  deadlineAt       DateTime?
+  errorCode        String?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+  completedAt      DateTime?
+
+  user           User            @relation(fields: [userId], references: [id], onDelete: Restrict)
+  conversation   Conversation    @relation(fields: [conversationId, userId], references: [id, userId], onDelete: Restrict)
+  requestMessage Message         @relation(fields: [requestMessageId, conversationId], references: [id, conversationId], onDelete: Restrict)
+  connections    RunConnection[]
+  goals          RunGoal[]
+  events         RunEvent[]
+  trials         Trial[]
+  toolCalls      ToolCall[]
+  approvals      Approval[]
+  transitions    RunTransition[]
+
+  // A connection must have the same owner as this run.
+  @@unique([id, userId])
+  @@unique([requestMessageId, conversationId])
+  @@index([userId, createdAt])
+  @@index([status, createdAt])
+  @@index([status, leaseExpiresAt])
+  @@index([status, nextAttemptAt])
+  @@index([conversationId, createdAt])
+}
+
+// Durable transition ledger. The state machine increments Run.stateVersion
+// and appends one matching row in the same transaction.
+model RunTransition {
+  id         String    @id @default(uuid())
+  runId      String
+  version    Int
+  fromStatus RunStatus
+  toStatus   RunStatus
+  reasonCode String?
+  workerId   String?
+  createdAt  DateTime  @default(now())
+
+  run Run @relation(fields: [runId], references: [id], onDelete: Restrict)
+
+  @@unique([runId, version])
+  @@index([runId, createdAt])
+}
+
+// A run can use several provider accounts, each owned by the run's user.
+model RunConnection {
+  runId        String
+  connectionId String
+  userId       String
+
+  run        Run        @relation(fields: [runId, userId], references: [id, userId], onDelete: Restrict)
+  connection Connection @relation(fields: [connectionId, userId], references: [id, userId], onDelete: Restrict)
+  toolCalls  ToolCall[]
+  approvals  Approval[]
+
+  @@id([runId, connectionId])
+  @@index([connectionId, userId])
+}
+
+model RunGoal {
+  id          String     @id @default(uuid())
+  runId       String
+  key         String
+  description String
+  status      GoalStatus @default(PENDING)
+  updatedAt   DateTime   @updatedAt
+
+  run Run @relation(fields: [runId], references: [id], onDelete: Restrict)
+
+  @@unique([runId, key])
+}
+
+// Append-only, user-safe progress. Allocate sequence inside a transaction.
+model RunEvent {
+  id        String   @id @default(uuid())
+  runId     String
+  sequence  Int
+  type      String
+  summary   String
+  metadata  Json?
+  createdAt DateTime @default(now())
+
+  run Run @relation(fields: [runId], references: [id], onDelete: Restrict)
+
+  @@unique([runId, sequence])
+}
+
+// A trial is a bounded, pre-write candidate. Provider writes never run in a trial.
+model Trial {
+  id        String      @id @default(uuid())
+  runId     String
+  number    Int
+  status    TrialStatus @default(RUNNING)
+  plan      Json?
+  startedAt DateTime    @default(now())
+  endedAt   DateTime?
+
+  run       Run                 @relation(fields: [runId], references: [id], onDelete: Restrict)
+  toolCalls ToolCall[]
+  feedback  EvaluationFeedback?
+
+  @@unique([runId, number])
+  @@unique([id, runId])
+}
+
+model ToolCall {
+  id               String         @id @default(uuid())
+  runId            String
+  trialId          String?
+  connectionId     String?
+  toolName         String
+  toolVersion      Int            @default(1)
+  kind             ToolKind
+  caller           ToolCaller     @default(AGENT)
+  approvalId       String?
+  status           ToolCallStatus @default(STARTED)
+  retryCount       Int            @default(0)
+  maxRetries       Int            @default(0)
+  nextAttemptAt    DateTime?
+  timeoutAt        DateTime?
+  safeInputSummary Json?
+  errorCode        String?
+  startedAt        DateTime       @default(now())
+  finishedAt       DateTime?
+
+  run           Run            @relation(fields: [runId], references: [id], onDelete: Restrict)
+  trial         Trial?         @relation(fields: [trialId, runId], references: [id, runId], onDelete: Restrict)
+  runConnection RunConnection? @relation(fields: [runId, connectionId], references: [runId, connectionId], onDelete: Restrict)
+  approval      Approval?      @relation(fields: [approvalId, runId], references: [id, runId], onDelete: Restrict)
+  observations  Observation[]
+
+  @@unique([id, runId])
+  @@index([runId, startedAt])
+  @@index([trialId])
+}
+
+// A bounded, non-secret observation; raw private provider data needs separate retention rules.
+model Observation {
+  id               String    @id @default(uuid())
+  toolCallId       String
+  runId            String
+  sourceResourceId String?
+  summary          Json
+  observedAt       DateTime
+  expiresAt        DateTime?
+  createdAt        DateTime  @default(now())
+
+  toolCall     ToolCall              @relation(fields: [toolCallId, runId], references: [id, runId], onDelete: Restrict)
+  feedbackUses FeedbackObservation[]
+
+  @@unique([id, runId])
+  @@index([toolCallId, observedAt])
+}
+
+model EvaluationFeedback {
+  id               String            @id @default(uuid())
+  trialId          String
+  runId            String
+  outcome          EvaluationOutcome
+  reasonCode       String?
+  evaluatorVersion String
+  createdAt        DateTime          @default(now())
+
+  trial      Trial                 @relation(fields: [trialId, runId], references: [id, runId], onDelete: Restrict)
+  evidence   FeedbackObservation[]
+  reflection Reflection?
+
+  @@unique([trialId, runId])
+  @@unique([id, runId])
+}
+
+// Composite foreign keys guarantee evidence and feedback belong to the same run.
+model FeedbackObservation {
+  feedbackId    String
+  observationId String
+  runId         String
+
+  feedback    EvaluationFeedback @relation(fields: [feedbackId, runId], references: [id, runId], onDelete: Restrict)
+  observation Observation        @relation(fields: [observationId, runId], references: [id, runId], onDelete: Restrict)
+
+  @@id([feedbackId, observationId])
+  @@index([observationId, runId])
+}
+
+// The owning user is derived through feedback -> trial -> run.
+model Reflection {
+  id                   String    @id @default(uuid())
+  feedbackId           String    @unique
+  mistakenAssumption   String
+  nextReadOrPlanChange String
+  validated            Boolean   @default(false)
+  createdAt            DateTime  @default(now())
+  expiresAt            DateTime?
+
+  feedback EvaluationFeedback @relation(fields: [feedbackId], references: [id], onDelete: Restrict)
+}
+
+// Only tools requiring approval get a row. Namespaced tool names are checked
+// against the server registry; there is no database enum for future integrations.
+// The action snapshot is intentionally immutable: it is the exact thing shown to the user.
+model Approval {
+  id             String         @id @default(uuid())
+  runId          String
+  connectionId   String?
+  toolName       String
+  toolVersion    Int            @default(1)
+  actionSnapshot Json
+  actionHash     String
+  status         ApprovalStatus @default(PENDING)
+  expiresAt      DateTime
+  decidedAt      DateTime?
+  createdAt      DateTime       @default(now())
+
+  run           Run              @relation(fields: [runId], references: [id], onDelete: Restrict)
+  runConnection RunConnection?   @relation(fields: [runId, connectionId], references: [runId, connectionId], onDelete: Restrict, onUpdate: Restrict)
+  execution     ActionExecution?
+  toolCalls     ToolCall[]
+
+  @@unique([id, runId])
+  @@index([runId, createdAt])
+  @@index([status, expiresAt])
+}
+
+model ActionExecution {
+  id                    String          @id @default(uuid())
+  approvalId            String          @unique
+  status                ExecutionStatus @default(PREPARED)
+  dispatchAttemptCount  Int             @default(0)
+  maxDispatchAttempts   Int             @default(1)
+  leaseOwner            String?
+  leaseExpiresAt        DateTime?
+  reconcileAfterAt      DateTime?
+  idempotencyKey        String          @unique
+  providerRequestMarker String?         @unique
+  providerResourceId    String?
+  errorCode             String?
+  startedAt             DateTime?
+  verifiedAt            DateTime?
+  createdAt             DateTime        @default(now())
+
+  approval Approval @relation(fields: [approvalId], references: [id], onDelete: Restrict)
+}

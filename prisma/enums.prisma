@@ -1,0 +1,90 @@
+// Database state enums live here and are generated into @prisma/client.
+// Tool and provider identifiers are not enums: new connectors do not require
+// a database enum migration. The application must validate them in a registry.
+enum MessageRole {
+  USER
+  ASSISTANT
+}
+
+enum ConnectionStatus {
+  ACTIVE
+  EXPIRED
+  REVOKED
+}
+
+enum RunStatus {
+  QUEUED
+  PLANNING
+  RUNNING
+  EVALUATING
+  REFLECTING
+  REPLANNING
+  NEEDS_CLARIFICATION
+  AWAITING_APPROVAL
+  EXECUTING
+  VERIFYING
+  COMPLETED
+  FAILED
+  CANCELLED
+  OUTCOME_UNKNOWN
+}
+
+enum GoalStatus {
+  PENDING
+  SATISFIED
+  BLOCKED
+}
+
+enum TrialStatus {
+  RUNNING
+  PASSED
+  RECOVERABLE_FAILURE
+  STOPPED
+}
+
+enum ToolKind {
+  READ
+  WRITE
+}
+
+enum ToolCaller {
+  AGENT
+  EXECUTOR
+  SYSTEM
+}
+
+enum ToolGrantStatus {
+  ACTIVE
+  REVOKED
+}
+
+enum ToolCallStatus {
+  STARTED
+  SUCCEEDED
+  FAILED
+  UNCERTAIN
+}
+
+enum EvaluationOutcome {
+  PASS
+  RECOVERABLE_FAILURE
+  NEEDS_USER
+  UNCERTAIN
+  HARD_FAIL
+}
+
+enum ApprovalStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  EXPIRED
+  INVALIDATED
+}
+
+enum ExecutionStatus {
+  PREPARED
+  IN_FLIGHT
+  SUCCEEDED
+  FAILED
+  OUTCOME_UNKNOWN
+}
