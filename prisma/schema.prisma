@@ -15,6 +15,7 @@ model User {
   authSubject String?  @unique
   timezone    String   @default("UTC")
   locale      String   @default("en")
+  avatarUrl   String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
