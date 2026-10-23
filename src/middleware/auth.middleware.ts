@@ -18,15 +18,22 @@ export interface AuthenticatedRequest extends Request {
 }
 
 export const extractToken = (req: Request): string | null => {
+
   const authHeader = req.headers.authorization;
+
   if (authHeader && authHeader.startsWith("Bearer ")) {
     return authHeader.substring(7).trim();
   }
+
+
   if (req.headers["x-access-token"]) {
     return String(req.headers["x-access-token"]).trim();
   }
+
   return null;
 };
+
+
 
 export const requireAuth = async (
   req: AuthenticatedRequest,
@@ -46,6 +53,7 @@ export const requireAuth = async (
     }
 
     const payload = verifyJwtToken(token);
+
     if (!payload || !payload.userId) {
       ApiResponse.error(res, {
         statusCode: 401,
@@ -81,6 +89,7 @@ export const requireAuth = async (
 
     req.user = user;
     next();
+
   } catch (error: any) {
     ApiResponse.error(res, {
       statusCode: 500,

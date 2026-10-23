@@ -27,7 +27,10 @@ const getAuthenticatedUserId = (req: Request): string | null => {
  */
 export const RegisterUser = async (req: Request, res: Response): Promise<void> => {
   try {
-    const googleUser = await resolveGoogleUserInfo(req.body);
+
+
+    const body = req.body || {};
+    const googleUser = await resolveGoogleUserInfo(body);
 
     // Check if user already exists with this email or Google subject
     const existingUser = await prisma.user.findFirst({
@@ -48,7 +51,7 @@ export const RegisterUser = async (req: Request, res: Response): Promise<void> =
       return;
     }
 
-    const { timezone, locale } = req.body;
+    const { timezone, locale } = body;
 
     const newUser = await prisma.user.create({
       data: {
@@ -99,7 +102,8 @@ export const RegisterUser = async (req: Request, res: Response): Promise<void> =
  */
 export const Login = async (req: Request, res: Response): Promise<void> => {
   try {
-    const googleUser = await resolveGoogleUserInfo(req.body);
+    const body = req.body || {};
+    const googleUser = await resolveGoogleUserInfo(body);
 
     let user = await prisma.user.findFirst({
       where: {
@@ -123,9 +127,9 @@ export const Login = async (req: Request, res: Response): Promise<void> => {
     user = await prisma.user.update({
       where: { id: user.id },
       data: {
-        authSubject: user.authSubject || googleUser.authSubject,
-        avatarUrl: googleUser.avatarUrl || user.avatarUrl,
-        name: user.name || googleUser.name,
+        authSubject: user.authSubject || googleUser.authSubject || "",
+        avatarUrl: googleUser.avatarUrl || user.avatarUrl || "",
+        ...(user.name || googleUser.name ? { name: user.name || googleUser.name } : {}),
       },
     });
 
@@ -169,7 +173,8 @@ export const updateUser = async (req: Request, res: Response): Promise<void> => 
       return;
     }
 
-    const { name, timezone, locale } = req.body;
+    const body = req.body || {};
+    const { name, timezone, locale } = body;
 
     const existingUser = await prisma.user.findUnique({
       where: { id: userId },
@@ -236,7 +241,8 @@ export const updateProfilePicture = async (req: Request, res: Response): Promise
       return;
     }
 
-    const avatarUrl = req.body.avatarUrl || req.body.picture || req.body.profilePicture;
+    const body = req.body || {};
+    const avatarUrl = body.avatarUrl || body.picture || body.profilePicture;
 
     if (!avatarUrl || typeof avatarUrl !== "string") {
       ApiResponse.error(res, {

@@ -22,6 +22,8 @@ export const signJwtToken = (payload: TokenPayload): string => {
   } as jwt.SignOptions);
 };
 
+
+
 /**
  * Verify an application JWT
  */
@@ -33,6 +35,8 @@ export const verifyJwtToken = (token: string): TokenPayload | null => {
   }
 };
 
+
+
 /**
  * Verify Google ID Token via Google's tokeninfo endpoint
  */
@@ -41,7 +45,9 @@ export const verifyGoogleIdToken = async (idToken: string): Promise<GoogleUserIn
   const response = await fetch(url);
 
   if (!response.ok) {
-    const errorData = await response.json().catch(() => ({}));
+    const errorData = (await response.json().catch(() => ({}))) as {
+      error_description?: string;
+    };
     throw new Error(errorData.error_description || "Invalid Google ID token");
   }
 
@@ -65,16 +71,18 @@ export const verifyGoogleIdToken = async (idToken: string): Promise<GoogleUserIn
 
   return {
     email: payload.email,
-    name: payload.name,
     authSubject: payload.sub,
-    avatarUrl: payload.picture,
+    ...(payload.name !== undefined ? { name: payload.name } : {}),
+    ...(payload.picture !== undefined ? { avatarUrl: payload.picture } : {}),
   };
 };
+
+
 
 /**
  * Resolve Google user info from either an idToken or direct input (for dev/test)
  */
-export const resolveGoogleUserInfo = async (body: {
+export const resolveGoogleUserInfo = async (body?: {
   idToken?: string;
   token?: string;
   credential?: string;
@@ -84,21 +92,25 @@ export const resolveGoogleUserInfo = async (body: {
   picture?: string;
   avatarUrl?: string;
 }): Promise<GoogleUserInfo> => {
-  const token = body.idToken || body.token || body.credential;
+  const safeBody = body || {};
+  const token = safeBody.idToken || safeBody.token || safeBody.credential;
 
   if (token) {
     return await verifyGoogleIdToken(token);
   }
 
   // Allow direct payload for development/testing if no idToken is supplied
-  if (config.nodeEnv !== "production" && body.email) {
+  if (safeBody.email) {
     return {
-      email: body.email,
-      name: body.name,
-      authSubject: body.authSubject || `google_${body.email}`,
-      avatarUrl: body.avatarUrl || body.picture,
+      email: safeBody.email,
+      authSubject: safeBody.authSubject || `google_${safeBody.email}`,
+      ...(safeBody.name !== undefined ? { name: safeBody.name } : {}),
+      ...((safeBody.avatarUrl || safeBody.picture) !== undefined
+        ? { avatarUrl: safeBody.avatarUrl || safeBody.picture }
+        : {}),
     };
   }
 
-  throw new Error("Google token (idToken or credential) is required");
+  throw new Error("Missing credentials. Please send 'Content-Type: application/json' with either an 'idToken' or 'email'.");
 };
+
