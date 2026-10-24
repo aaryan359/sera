@@ -10,4 +10,6 @@ export const config = {
   jwtSecret: process.env.JWT_SECRET || "sera_jwt_super_secret_dev_key_2026",
   jwtExpiresIn: process.env.JWT_EXPIRES_IN || "7d",
   googleClientId: process.env.GOOGLE_CLIENT_ID || "",
+  // Self-hosted search (see compose.yaml). Defaults to the local SearXNG port.
+  searxngUrl: process.env.SEARXNG_URL || `http://127.0.0.1:${process.env.SEARXNG_HOST_PORT || "18888"}`,
 };

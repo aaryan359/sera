@@ -4,6 +4,9 @@ import ApiResponse from "../utils/ApiResponse.ts";
 import { resolveGoogleUserInfo, signJwtToken, verifyJwtToken } from "../utils/auth.ts";
 import { extractToken, type AuthenticatedRequest } from "../middleware/auth.middleware.ts";
 
+
+
+
 /**
  * Helper to resolve the authenticated user ID from either req.user or the Authorization header
  */
@@ -22,9 +25,15 @@ const getAuthenticatedUserId = (req: Request): string | null => {
   return payload?.userId || null;
 };
 
-/**
- * Register a new user via Google OAuth
- */
+
+
+
+
+
+
+
+
+// Register a new user via Google OAuth
 export const RegisterUser = async (req: Request, res: Response): Promise<void> => {
   try {
 

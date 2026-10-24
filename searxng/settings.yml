@@ -1,0 +1,13 @@
+# Local SearXNG settings. Anything not listed here uses SearXNG's defaults.
+use_default_settings: true
+
+search:
+  # Sera's search client reads JSON, so json must be on.
+  formats:
+    - html
+    - json
+
+server:
+  # Only this machine can reach the instance (see compose.yaml), so the bot limiter is not needed.
+  limiter: false
+  image_proxy: false

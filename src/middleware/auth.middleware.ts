@@ -3,6 +3,8 @@ import ApiResponse from "../utils/ApiResponse.ts";
 import { verifyJwtToken } from "../utils/auth.ts";
 import { prisma } from "../db/prisma.ts";
 
+
+
 export interface AuthenticatedUser {
   id: string;
   email: string;
@@ -12,6 +14,10 @@ export interface AuthenticatedUser {
   locale: string;
   avatarUrl?: string | null;
 }
+
+
+
+
 
 export interface AuthenticatedRequest extends Request {
   user?: AuthenticatedUser;
