@@ -4,7 +4,7 @@ import { reconcileApproval, requestApproval, runApproved } from "../safety.ts";
 import { callTool, registry } from "../index.ts";
 import { ToolError, type Context } from "../safety.ts";
 import { createGmailApi, emailsIn, type GmailApi, type Thread, type ThreadSummary } from "./client/api.ts";
-import { buildReply } from "./client/mime.ts";
+import { buildEmail } from "./client/mime.ts";
 import { expectError, makeContext, unusedCalendar } from "../test-kit.ts";
 
 // ---------- a fake Gmail ----------
@@ -278,7 +278,7 @@ test("requestApproval stores a fingerprint of the exact action", async () => {
 test("a header with a line break is rejected (header injection)", () => {
   assert.throws(
     () =>
-      buildReply({
+      buildEmail({
         to: "maya@example.com",
         subject: "Hi\r\nBcc: attacker@evil.test",
         body: "x",

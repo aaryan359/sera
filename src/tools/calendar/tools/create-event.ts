@@ -12,8 +12,10 @@ export const createEvent = defineTool({
   input: createEventAction,
   output: createEventOutput,
   run: async (action, ctx) => {
+
     const start = new Date(action.startUtc);
     const end = new Date(action.endUtc);
+    
 
     // Check again: the slot may have been taken since the user approved it.
     const busy = await ctx.calendar.freeBusy(action.startUtc, action.endUtc);

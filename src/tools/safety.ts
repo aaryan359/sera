@@ -1,10 +1,12 @@
 import { createHash } from "node:crypto";
 import type { z } from "zod";
+import type { ApplicationStore } from "./applications/client/store.ts";
 import type { CalendarApi } from "./calendar/client/api.ts";
+import type { ContactsApi } from "./contacts/client/api.ts";
+import type { DriveApi } from "./drive/client/api.ts";
 import type { GmailApi } from "./gmail/client/api.ts";
+import type { JobsApi } from "./jobs/client/api.ts";
 import type { WebApi } from "./web/client/api.ts";
-
-
 
 
 
@@ -12,11 +14,13 @@ import type { WebApi } from "./web/client/api.ts";
 // PART 1: Basic words
 // =====================================================================
 
-// READ:    only looks at data. The assistant may call it directly.
-// PROPOSE: prepares an action and saves it for approval. Changes nothing outside Sera.
-// EXECUTE: does the real action (sends an email, creates an event).
-//          Runs only after the user approves. The assistant can never call it.
-export type ToolKind = "READ" | "PROPOSE" | "EXECUTE";
+// READ:        only looks at data. The assistant may call it directly.
+// PROPOSE:     prepares an action and saves it for approval. Changes nothing outside Sera.
+// WRITE_LOCAL: changes only Sera's own records (for example, a job-application log).
+//              The assistant may call it directly; nothing leaves Sera.
+// EXECUTE:     does the real action outside Sera (sends an email, creates an event).
+//              Runs only after the user approves. The assistant can never call it.
+export type ToolKind = "READ" | "PROPOSE" | "WRITE_LOCAL" | "EXECUTE";
 
 export type ErrorCode =
   | "UNKNOWN_TOOL"
@@ -33,6 +37,8 @@ export type ErrorCode =
   | "BAD_TIME_RANGE"
   | "SLOT_BUSY"
   | "BLOCKED_URL"
+  | "FILE_NOT_ALLOWED"
+  | "FILE_CHANGED"
   | "APPROVAL_NOT_FOUND"
   | "NOT_APPROVED"
   | "APPROVAL_EXPIRED"
@@ -95,6 +101,10 @@ export interface Context {
   gmail: GmailApi;
   calendar: CalendarApi;
   web: WebApi;
+  contacts: ContactsApi;
+  drive: DriveApi; // Google Drive and Google Docs
+  jobs: JobsApi;
+  applications: ApplicationStore; // the user's job-application log
   approvals: ApprovalStore;
   grants: GrantStore;
   now: () => Date;

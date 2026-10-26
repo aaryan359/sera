@@ -1,5 +1,5 @@
 import { defineTool, ToolError } from "../../safety.ts";
-import { buildReply } from "../client/mime.ts";
+import { buildEmail } from "../client/mime.ts";
 import { SEND_SCOPE } from "../scopes.ts";
 import { sendReplyAction, sendReplyOutput } from "../types.ts";
 
@@ -18,7 +18,7 @@ export const sendReply = defineTool({
       throw new ToolError("THREAD_CHANGED", "the thread changed after approval; propose again");
     }
 
-    const raw = buildReply({
+    const raw = buildEmail({
       to: action.to,
       subject: action.subject,
       body: action.body,

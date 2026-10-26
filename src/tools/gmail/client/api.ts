@@ -33,7 +33,7 @@ export interface GmailApi {
   searchThreads(query: string, max: number): Promise<ThreadSummary[]>;
   getThread(threadId: string): Promise<Thread>;
   // A write. If it times out, the message may still have been sent.
-  sendRaw(raw: string, threadId: string): Promise<{ messageId: string; threadId: string }>;
+  sendRaw(raw: string, threadId?: string): Promise<{ messageId: string; threadId: string }>;
   // Looks up a sent message by its Message-ID. Pass the id WITHOUT < >.
   findSentMessage(messageId: string): Promise<{ messageId: string; threadId: string } | null>;
 }
@@ -88,7 +88,9 @@ export function createGmailApi(options: GmailOptions): GmailApi {
     },
 
     async sendRaw(raw, threadId) {
-      const sent = await request("/messages/send", { raw, threadId }, true);
+      // Without a threadId, Gmail starts a new conversation.
+      const body = threadId ? { raw, threadId } : { raw };
+      const sent = await request("/messages/send", body, true);
       return { messageId: sent.id, threadId: sent.threadId };
     },
 

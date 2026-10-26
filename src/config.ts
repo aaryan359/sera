@@ -12,4 +12,9 @@ export const config = {
   googleClientId: process.env.GOOGLE_CLIENT_ID || "",
   // Self-hosted search (see compose.yaml). Defaults to the local SearXNG port.
   searxngUrl: process.env.SEARXNG_URL || `http://127.0.0.1:${process.env.SEARXNG_HOST_PORT || "18888"}`,
+  // Greenhouse job boards to search, as a comma-separated list of board tokens, e.g. "stripe,airbnb".
+  greenhouseBoards: (process.env.GREENHOUSE_BOARDS || "")
+    .split(",")
+    .map((board) => board.trim())
+    .filter((board) => board !== ""),
 };

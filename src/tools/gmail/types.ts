@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { driveFileId } from "../drive/types.ts";
 
 // ---- Shared pieces ----
 
@@ -90,8 +91,57 @@ export const sendReplyOutput = z.object({
   threadId: z.string(),
 });
 
+// ---- gmail.propose_email (a new email, optionally with Drive attachments) ----
 
+export const proposeEmailInput = z.object({
+  to: emailAddress,
+  subject: z
+    .string()
+    .min(1)
+    .max(200)
+    .refine((s) => !/[\r\n\0]/.test(s), "the subject cannot contain line breaks"),
+  body: z.string().min(1).max(5000),
+  attachmentFileIds: z
+    .array(driveFileId)
+    .max(3)
+    .default([])
+    .describe("Drive fileIds to attach (PDF, Word, text, or image; 10 MB each at most)"),
+});
 
+export const proposeEmailOutput = z.object({
+  approvalId: z.string(),
+  preview: z.object({
+    to: z.string(),
+    subject: z.string(),
+    body: z.string(),
+    attachments: z.array(z.string()),
+    expiresAt: z.string(),
+  }),
+});
+
+// ---- gmail.send_email (the approved action) ----
+
+// An attachment as it was approved: the md5 lets the send check the exact bytes.
+export const attachmentRef = z.object({
+  fileId: driveFileId,
+  name: z.string().max(200),
+  mimeType: z.string(),
+  size: z.number().int().positive(),
+  md5: z.string().min(1),
+});
+
+export const sendEmailAction = z.object({
+  to: emailAddress,
+  subject: z.string().min(1).max(200),
+  body: z.string().min(1).max(5000),
+  attachments: z.array(attachmentRef).max(3),
+  marker,
+});
+
+export const sendEmailOutput = z.object({
+  providerId: z.string(),
+  threadId: z.string(),
+});
 
 // ---- TypeScript types ----
 
@@ -108,3 +158,10 @@ export type ProposeReplyOutput = z.infer<typeof proposeReplyOutput>;
 
 export type SendReplyAction = z.infer<typeof sendReplyAction>;
 export type SendReplyOutput = z.infer<typeof sendReplyOutput>;
+
+export type ProposeEmailInput = z.infer<typeof proposeEmailInput>;
+export type ProposeEmailOutput = z.infer<typeof proposeEmailOutput>;
+
+export type AttachmentRef = z.infer<typeof attachmentRef>;
+export type SendEmailAction = z.infer<typeof sendEmailAction>;
+export type SendEmailOutput = z.infer<typeof sendEmailOutput>;
