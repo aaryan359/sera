@@ -202,7 +202,7 @@ export async function requestApproval(
     ctx: Context,
     toolName: string,
     args: Record<string, unknown>,
-): Promise<Approval> {
+) {
     const expiresAt = new Date(ctx.now().getTime() + APPROVAL_MINUTES * 60_000);
     return ctx.approvals.create({
         runId: ctx.runId,
@@ -215,11 +215,7 @@ export async function requestApproval(
 }
 
 // Step 2: run the approved action, exactly once.
-export async function runApproved(
-    approvalId: string,
-    registry: Registry,
-    ctx: Context,
-): Promise<any> {
+export async function runApproved(approvalId: string, registry: Registry, ctx: Context) {
     const approval = await ctx.approvals.get(approvalId);
     if (!approval || approval.runId !== ctx.runId || approval.connectionId !== ctx.connectionId) {
         throw new ToolError("APPROVAL_NOT_FOUND", "no approval for this run");
@@ -268,11 +264,7 @@ export async function runApproved(
 }
 
 // For an UNKNOWN action: asks the provider whether it happened. Never repeats it.
-export async function reconcileApproval(
-    approvalId: string,
-    registry: Registry,
-    ctx: Context,
-): Promise<any> {
+export async function reconcileApproval(approvalId: string, registry: Registry, ctx: Context) {
     const approval = await ctx.approvals.get(approvalId);
     if (!approval || approval.status !== "UNKNOWN") {
         throw new ToolError("NOT_APPROVED", "only UNKNOWN actions can be checked");
@@ -292,7 +284,7 @@ export async function reconcileApproval(
 // =====================================================================
 
 // A fingerprint of the exact action. Any change to it changes the fingerprint.
-export function fingerprint(connectionId: string, toolName: string, args: unknown): string {
+export function fingerprint(connectionId: string, toolName: string, args: unknown) {
     const text = JSON.stringify(sortKeys({ connectionId, toolName, args }));
     return createHash("sha256").update(text).digest("hex");
 }
@@ -321,7 +313,7 @@ export function checkShape(schema: z.ZodType, value: unknown, code: ErrorCode): 
 }
 
 // The user must have allowed the tool, and the account must have every scope it needs.
-export async function checkPermission(tool: ToolDef, ctx: Context): Promise<void> {
+export async function checkPermission(tool: ToolDef, ctx: Context) {
     if (!(await ctx.grants.hasGrant(ctx.connectionId, tool.name))) {
         throw new ToolError("NO_GRANT", `the user has not allowed ${tool.name}`);
     }

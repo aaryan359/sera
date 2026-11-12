@@ -17,7 +17,7 @@ export interface AuthenticatedRequest extends Request {
     user?: AuthenticatedUser;
 }
 
-export const extractToken = (req: Request): string | null => {
+export const extractToken = (req: Request) => {
     const authHeader = req.headers.authorization;
 
     if (authHeader && authHeader.startsWith("Bearer ")) {
@@ -31,11 +31,7 @@ export const extractToken = (req: Request): string | null => {
     return null;
 };
 
-export const requireAuth = async (
-    req: AuthenticatedRequest,
-    res: Response,
-    next: NextFunction,
-): Promise<void> => {
+export const requireAuth = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     try {
         const token = extractToken(req);
 

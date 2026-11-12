@@ -96,7 +96,7 @@ export function createJobsApi(options: JobsOptions): JobsApi {
 }
 
 // Greenhouse returns the description HTML-encoded, sometimes twice. Decode it, then remove tags.
-function describe(content: string): string {
+function describe(content: string) {
     const decoded = decodeEntities(decodeEntities(content));
     return decoded
         .replace(/<(script|style)[^>]*>[\s\S]*?<\/\1>/gi, " ")
@@ -105,7 +105,7 @@ function describe(content: string): string {
         .trim();
 }
 
-function decodeEntities(text: string): string {
+function decodeEntities(text: string) {
     return text
         .replace(/&nbsp;/g, " ")
         .replace(/&quot;/g, '"')

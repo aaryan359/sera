@@ -98,7 +98,7 @@ function world() {
     return { gmail, ctx, approvals, clock };
 }
 
-async function propose(ctx: Context): Promise<string> {
+async function propose(ctx: Context) {
     const out = (await callTool(
         registry,
         "gmail.propose_reply",

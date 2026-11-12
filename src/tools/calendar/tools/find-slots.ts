@@ -47,7 +47,7 @@ export const findSlots = defineTool({
 });
 
 // Minutes since midnight, in a time zone.
-function localMinutes(instant: Date, timeZone: string): number {
+function localMinutes(instant: Date, timeZone: string) {
     const local = formatLocal(instant, timeZone); // 2026-10-27T09:30
     const [hour = "0", minute = "0"] = local.slice(11).split(":");
     return Number(hour) * 60 + Number(minute);

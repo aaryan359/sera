@@ -21,7 +21,7 @@ export interface EmailFields {
 // Builds an email and encodes it the way Gmail's send endpoint expects (base64url).
 // An email is headers, a blank line, then the body.
 // With attachments, the body and each file become separate parts of one multipart message.
-export function buildEmail(fields: EmailFields): string {
+export function buildEmail(fields: EmailFields) {
     const attachments = fields.attachments ?? [];
     const multipart = attachments.length > 0;
     const boundary = `sera-${randomUUID()}`;
@@ -72,7 +72,7 @@ export function buildEmail(fields: EmailFields): string {
 
 // Rejects line breaks in header values. A line break there would let someone
 // add a hidden header such as Bcc.
-function headerLine(name: string, value: string): string | null {
+function headerLine(name: string, value: string) {
     if (value === "") return null;
     if (/[\r\n\0]/.test(value)) {
         throw new ToolError("UNSAFE_HEADER", `${name} contains a line break`);
@@ -85,15 +85,15 @@ function headerLine(name: string, value: string): string | null {
 }
 
 // Attachment names are reduced to plain characters, so they cannot break the headers.
-function safeFilename(name: string): string {
+function safeFilename(name: string) {
     return name.replace(/[^A-Za-z0-9._-]/g, "_").slice(0, 100) || "file";
 }
 
 // Base64 text is split into lines of at most 76 characters.
-function wrap(base64: string): string {
+function wrap(base64: string) {
     return base64.match(/.{1,76}/g)?.join("\r\n") ?? "";
 }
 
-function encode(lines: string[]): string {
+function encode(lines: string[]) {
     return Buffer.from(lines.join("\r\n"), "utf8").toString("base64url");
 }

@@ -45,7 +45,7 @@ function world(now = "2026-10-24T00:00:00Z") {
     return { calendar, ctx, approvals };
 }
 
-async function propose(ctx: Context, start: string, end: string): Promise<string> {
+async function propose(ctx: Context, start: string, end: string) {
     const out = (await callTool(
         registry,
         "calendar.propose_event",

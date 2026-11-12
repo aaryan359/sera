@@ -120,7 +120,7 @@ function toFileInfo(raw: any): FileInfo {
 }
 
 // Joins the text runs of a Google Docs body.
-function docText(doc: any): string {
+function docText(doc: any) {
     let text = "";
     for (const item of doc.body?.content ?? []) {
         for (const element of item.paragraph?.elements ?? []) {

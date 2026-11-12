@@ -16,7 +16,7 @@ export interface GoogleUserInfo {
 /**
  * Generate a JWT for an authenticated user
  */
-export const signJwtToken = (payload: TokenPayload): string => {
+export const signJwtToken = (payload: TokenPayload) => {
     return jwt.sign(payload, config.jwtSecret, {
         expiresIn: config.jwtExpiresIn,
     } as jwt.SignOptions);
@@ -25,7 +25,7 @@ export const signJwtToken = (payload: TokenPayload): string => {
 /**
  * Verify an application JWT
  */
-export const verifyJwtToken = (token: string): TokenPayload | null => {
+export const verifyJwtToken = (token: string) => {
     try {
         return jwt.verify(token, config.jwtSecret) as TokenPayload;
     } catch (error) {

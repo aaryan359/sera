@@ -7,7 +7,7 @@ import { extractToken, type AuthenticatedRequest } from "../middleware/auth.midd
 /**
  * Helper to resolve the authenticated user ID from either req.user or the Authorization header
  */
-const getAuthenticatedUserId = (req: Request): string | null => {
+const getAuthenticatedUserId = (req: Request) => {
     const authReq = req as AuthenticatedRequest;
     if (authReq.user?.id) {
         return authReq.user.id;
@@ -23,7 +23,7 @@ const getAuthenticatedUserId = (req: Request): string | null => {
 };
 
 // Register a new user via Google OAuth
-export const RegisterUser = async (req: Request, res: Response): Promise<void> => {
+export const RegisterUser = async (req: Request, res: Response) => {
     try {
         const body = req.body || {};
         const googleUser = await resolveGoogleUserInfo(body);
@@ -93,7 +93,7 @@ export const RegisterUser = async (req: Request, res: Response): Promise<void> =
 /**
  * Login user via Google OAuth
  */
-export const Login = async (req: Request, res: Response): Promise<void> => {
+export const Login = async (req: Request, res: Response) => {
     try {
         const body = req.body || {};
         const googleUser = await resolveGoogleUserInfo(body);
@@ -161,7 +161,7 @@ export const Login = async (req: Request, res: Response): Promise<void> => {
 /**
  * Update user profile details (name, timezone, locale)
  */
-export const updateUser = async (req: Request, res: Response): Promise<void> => {
+export const updateUser = async (req: Request, res: Response) => {
     try {
         const userId = getAuthenticatedUserId(req);
 
@@ -229,7 +229,7 @@ export const updateUser = async (req: Request, res: Response): Promise<void> => 
 /**
  * Update user profile picture
  */
-export const updateProfilePicture = async (req: Request, res: Response): Promise<void> => {
+export const updateProfilePicture = async (req: Request, res: Response) => {
     try {
         const userId = getAuthenticatedUserId(req);
 
@@ -291,7 +291,7 @@ export const updateProfilePicture = async (req: Request, res: Response): Promise
 /**
  * Check authentication status and return current user details
  */
-export const checkAuth = async (req: Request, res: Response): Promise<void> => {
+export const checkAuth = async (req: Request, res: Response) => {
     try {
         const userId = getAuthenticatedUserId(req);
 

@@ -23,7 +23,7 @@ export interface PageOptions {
 }
 
 // Checks a URL before any network use. Throws BLOCKED_URL if it is not allowed.
-export function checkUrl(raw: string): URL {
+export function checkUrl(raw: string) {
     let url: URL;
     try {
         url = new URL(raw);
@@ -45,7 +45,7 @@ export function checkUrl(raw: string): URL {
 }
 
 // True for loopback, private, link-local, and other reserved addresses.
-export function isPrivateIp(address: string): boolean {
+export function isPrivateIp(address: string) {
     const ip = bare(address).toLowerCase();
     if (isIP(ip) === 4) {
         const [a = 0, b = 0] = ip.split(".").map(Number);
@@ -73,7 +73,7 @@ export function isPrivateIp(address: string): boolean {
 }
 
 // Reads a page. Checks every redirect and every resolved address before connecting.
-export async function fetchPage(raw: string, options: PageOptions = {}): Promise<PageResult> {
+export async function fetchPage(raw: string, options: PageOptions = {}) {
     const doFetch = options.fetchImpl ?? fetch;
     const resolve = options.resolveHost ?? defaultResolve;
     let url = checkUrl(raw);
@@ -112,13 +112,13 @@ export async function fetchPage(raw: string, options: PageOptions = {}): Promise
     }
 }
 
-async function defaultResolve(hostname: string): Promise<string[]> {
+async function defaultResolve(hostname: string) {
     const found = await lookup(hostname, { all: true });
     return found.map((entry) => entry.address);
 }
 
 // Reads at most MAX_BYTES of the response body.
-async function readLimited(res: Response): Promise<string> {
+async function readLimited(res: Response) {
     const reader = res.body?.getReader();
     if (!reader) return "";
     const chunks: Buffer[] = [];
@@ -142,14 +142,14 @@ function toResult(url: string, body: string, type: string): PageResult {
 }
 
 // Removes the head section, scripts, styles, and all tags.
-function stripTags(html: string): string {
+function stripTags(html: string) {
     return html
         .replace(/<head[\s\S]*?<\/head>/gi, " ")
         .replace(/<(script|style|noscript)[^>]*>[\s\S]*?<\/\1>/gi, " ")
         .replace(/<[^>]+>/g, " ");
 }
 
-function decodeEntities(text: string): string {
+function decodeEntities(text: string) {
     return text
         .replace(/&nbsp;/g, " ")
         .replace(/&quot;/g, '"')
@@ -159,15 +159,15 @@ function decodeEntities(text: string): string {
         .replace(/&amp;/g, "&");
 }
 
-function collapse(text: string): string {
+function collapse(text: string) {
     return text.replace(/\s+/g, " ").trim();
 }
 
 // URL hostnames for IPv6 come in brackets, e.g. [::1]. Remove them.
-function bare(host: string): string {
+function bare(host: string) {
     return host.replace(/^\[|\]$/g, "");
 }
 
-function blocked(message: string): ToolError {
+function blocked(message: string) {
     return new ToolError("BLOCKED_URL", message);
 }

@@ -117,6 +117,6 @@ export function makeContext(parts: {
     return { ctx, approvals, clock };
 }
 
-export async function expectError(promise: Promise<unknown>, code: string): Promise<void> {
+export async function expectError(promise: Promise<unknown>, code: string) {
     await assert.rejects(promise, (err: unknown) => err instanceof ToolError && err.code === code);
 }

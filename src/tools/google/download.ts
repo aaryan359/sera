@@ -11,7 +11,7 @@ export interface DownloadOptions {
 export function createGoogleDownload(options: DownloadOptions) {
     const doFetch = options.fetchImpl ?? fetch;
 
-    return async function download(path: string, maxBytes: number): Promise<Buffer> {
+    return async function download(path: string, maxBytes: number) {
         const token = await options.getAccessToken();
         let res: Response;
         try {

@@ -107,18 +107,18 @@ export function createGmailApi(options: GmailOptions): GmailApi {
 
 // ---- Helpers for reading Gmail's raw JSON ----
 
-function headerMap(headers: { name: string; value: string }[] | undefined): Record<string, string> {
+function headerMap(headers: { name: string; value: string }[] | undefined) {
     const result: Record<string, string> = {};
     for (const h of headers ?? []) result[h.name.toLowerCase()] = h.value;
     return result;
 }
 
-function isoDate(millis: string | undefined): string {
+function isoDate(millis: string | undefined) {
     return new Date(Number(millis ?? 0)).toISOString();
 }
 
 // "Maya <Maya@Example.com>, bob@x.com" -> ["maya@example.com", "bob@x.com"]
-export function emailsIn(text: string): string[] {
+export function emailsIn(text: string) {
     return (text.match(/[^\s<>,"]+@[^\s<>,"]+/g) ?? []).map((email) => email.toLowerCase());
 }
 
@@ -152,7 +152,7 @@ function toMessage(raw: RawMessage): Message {
 }
 
 // Plain text is preferred. If there is none, HTML is converted to rough text.
-function bodyText(payload: RawPart | undefined): { text: string; truncated: boolean } {
+function bodyText(payload: RawPart | undefined) {
     const plain = findText(payload, "text/plain");
     const html = findText(payload, "text/html");
     const text = removeQuotedReply(plain ?? stripHtml(html ?? ""));
@@ -172,7 +172,7 @@ function findText(part: RawPart | undefined, type: string): string | null {
     return null;
 }
 
-function stripHtml(html: string): string {
+function stripHtml(html: string) {
     return html
         .replace(/<(script|style)[^>]*>[\s\S]*?<\/\1>/gi, " ")
         .replace(/<[^>]+>/g, " ")
@@ -181,7 +181,7 @@ function stripHtml(html: string): string {
 }
 
 // Removes earlier messages quoted inside a reply. This saves a lot of tokens.
-function removeQuotedReply(text: string): string {
+function removeQuotedReply(text: string) {
     const kept: string[] = [];
     for (const line of text.split(/\r?\n/)) {
         const trimmed = line.trim();
