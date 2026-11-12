@@ -9,4 +9,11 @@ import { sendReply } from "./tools/send-reply.ts";
 export { createGmailApi, type GmailApi } from "./client/api.ts";
 
 // Every Gmail tool. The registry hides the EXECUTE tools from the assistant.
-export const gmailTools: ToolDef[] = [searchThreads, getThread, proposeReply, sendReply, proposeEmail, sendEmail];
+export const gmailTools: ToolDef[] = [
+    searchThreads,
+    getThread,
+    proposeReply,
+    sendReply,
+    proposeEmail,
+    sendEmail,
+];

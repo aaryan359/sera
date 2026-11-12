@@ -10,23 +10,23 @@ import { createRegistry } from "./safety.ts";
 
 // Every tool the assistant can reach, in one registry.
 export const registry = createRegistry([
-  ...gmailTools,
-  ...calendarTools,
-  ...timeTools,
-  ...webTools,
-  ...contactsTools,
-  ...driveTools,
-  ...jobsTools,
-  ...applicationTools,
+    ...gmailTools,
+    ...calendarTools,
+    ...timeTools,
+    ...webTools,
+    ...contactsTools,
+    ...driveTools,
+    ...jobsTools,
+    ...applicationTools,
 ]);
 
 export {
-  callTool,
-  requestApproval,
-  reconcileApproval,
-  runApproved,
-  type Context,
-  type ApprovalStore,
-  type GrantStore,
-  type Approval,
+    callTool,
+    requestApproval,
+    reconcileApproval,
+    runApproved,
+    type Context,
+    type ApprovalStore,
+    type GrantStore,
+    type Approval,
 } from "./safety.ts";

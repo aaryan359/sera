@@ -1,10 +1,10 @@
 import { Router } from "express";
 import {
-  RegisterUser,
-  Login,
-  updateUser,
-  updateProfilePicture,
-  checkAuth,
+    RegisterUser,
+    Login,
+    updateUser,
+    updateProfilePicture,
+    checkAuth,
 } from "../controllers/user.controller.ts";
 import { requireAuth } from "../middleware/auth.middleware.ts";
 

@@ -5,4 +5,8 @@ import { setApplicationStatus } from "./tools/set-status.ts";
 
 export { createMemoryApplicationStore, type ApplicationStore } from "./client/store.ts";
 
-export const applicationTools: ToolDef[] = [recordApplication, listApplications, setApplicationStatus];
+export const applicationTools: ToolDef[] = [
+    recordApplication,
+    listApplications,
+    setApplicationStatus,
+];

@@ -3,31 +3,31 @@ import { z } from "zod";
 // ---- web.search ----
 
 export const searchInput = z.object({
-  query: z.string().min(1).max(200),
-  count: z.number().int().min(1).max(10).default(5),
+    query: z.string().min(1).max(200),
+    count: z.number().int().min(1).max(10).default(5),
 });
 
 export const searchResult = z.object({
-  title: z.string(),
-  url: z.string(),
-  snippet: z.string(),
+    title: z.string(),
+    url: z.string(),
+    snippet: z.string(),
 });
 
 export const searchOutput = z.object({
-  results: z.array(searchResult),
+    results: z.array(searchResult),
 });
 
 // ---- web.fetch_page ----
 
 export const fetchPageInput = z.object({
-  url: z.string().min(8).max(2000),
+    url: z.string().min(8).max(2000),
 });
 
 export const fetchPageOutput = z.object({
-  url: z.string(),
-  title: z.string(),
-  text: z.string(),
-  truncated: z.boolean(),
+    url: z.string(),
+    title: z.string(),
+    text: z.string(),
+    truncated: z.boolean(),
 });
 
 // ---- TypeScript types ----
