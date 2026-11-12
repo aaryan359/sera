@@ -1,33 +1,50 @@
-import express from "express";
+import express, { type ErrorRequestHandler } from "express";
 import cors from "cors";
+import { config } from "./config.ts";
 import router from "./routes/index.ts";
-import dotenv from "dotenv";
-dotenv.config();
+import ApiResponse from "./utils/ApiResponse.ts";
 
 const app = express();
+const API_PREFIX = "/v1/api";
 
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(cors());
+app.use(express.json({ limit: "1mb" }));
+app.use(express.urlencoded({ extended: false, limit: "1mb" }));
 
-app.use(
-    cors({
-        origin: "*",
-        methods: ["GET", "POST", "PUT", "DELETE"],
-        allowedHeaders: ["Content-Type", "Authorization"],
-    }),
-);
+app.get("/health", (_req, res) => {
+    res.status(200).json({ status: "healthy" });
+});
 
-app.use("/api/v1", router);
+app.get(API_PREFIX, (_req, res) => {
+    ApiResponse.success(res, { message: "Sera API v1" });
+});
 
-app.get("/health", (req, res) => {
-    res.status(200).json({
-        status: "healthy",
-        timestamp: new Date().toISOString(),
+app.use(API_PREFIX, router);
+
+app.use((_req, res) => {
+    ApiResponse.error(res, {
+        statusCode: 404,
+        message: "Route not found",
+        error: "NOT_FOUND",
     });
 });
 
-const PORT = process.env.PORT || 3333;
+const handleError: ErrorRequestHandler = (err, _req, res, next) => {
+    if (res.headersSent) {
+        next(err);
+        return;
+    }
 
-app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
+    const status = Number(err?.status);
+    const statusCode = Number.isInteger(status) && status >= 400 && status < 500 ? status : 500;
+    ApiResponse.error(res, {
+        statusCode,
+        message: statusCode < 500 ? "Invalid request" : "Internal server error",
+    });
+};
+
+app.use(handleError);
+
+app.listen(config.port, () => {
+    console.log(`Sera API running on port ${config.port} at ${API_PREFIX}`);
 });
