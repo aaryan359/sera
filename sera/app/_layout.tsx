@@ -9,6 +9,7 @@ import { useFonts } from "expo-font";
 import * as SplashScreen from "expo-splash-screen";
 import { useEffect } from "react";
 import { View } from "react-native";
+import { AppToast } from "../config/toast-config";
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 SplashScreen.preventAutoHideAsync();
@@ -56,6 +57,7 @@ function AppContent() {
 
             </Stack>
             
+            <AppToast />
         </View>
     );
 }
