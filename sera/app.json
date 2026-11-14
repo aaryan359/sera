@@ -4,34 +4,33 @@
     "slug": "sera",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
+    "icon": "./assets/branding/sera-icon.png",
     "scheme": "sera",
     "userInterfaceStyle": "automatic",
     "ios": {
-      "icon": "./assets/expo.icon"
+      "icon": "./assets/branding/sera-icon.png"
     },
     "android": {
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
-        "foregroundImage": "./assets/images/android-icon-foreground.png",
-        "backgroundImage": "./assets/images/android-icon-background.png",
-        "monochromeImage": "./assets/images/android-icon-monochrome.png"
+        "backgroundColor": "#F5F6EE",
+        "foregroundImage": "./assets/branding/sera-adaptive.png",
+        "monochromeImage": "./assets/branding/sera-adaptive.png"
       },
       "predictiveBackGestureEnabled": false,
       "package": "com.anonymous.sera"
     },
     "web": {
       "output": "server",
-      "favicon": "./assets/images/favicon.png"
+      "favicon": "./assets/branding/sera-favicon.png"
     },
     "plugins": [
       "expo-router",
       [
         "expo-splash-screen",
         {
-          "backgroundColor": "#208AEF",
-          "image": "./assets/images/splash-icon.png",
-          "imageWidth": 76
+          "backgroundColor": "#F5F6EE",
+          "image": "./assets/branding/sera-wordmark.png",
+          "imageWidth": 156
         }
       ],
       "react-native-liquid-glassmorphism"
