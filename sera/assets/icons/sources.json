@@ -1,0 +1,147 @@
+[
+  {
+    "file": "settings/user-round.svg",
+    "bytes": 274,
+    "source": "https://raw.githubusercontent.com/lucide-icons/lucide/main/icons/user-round.svg"
+  },
+  {
+    "file": "settings/bell.svg",
+    "bytes": 388,
+    "source": "https://raw.githubusercontent.com/lucide-icons/lucide/main/icons/bell.svg"
+  },
+  {
+    "file": "settings/plug-zap.svg",
+    "bytes": 408,
+    "source": "https://raw.githubusercontent.com/lucide-icons/lucide/main/icons/plug-zap.svg"
+  },
+  {
+    "file": "settings/repeat-2.svg",
+    "bytes": 341,
+    "source": "https://raw.githubusercontent.com/lucide-icons/lucide/main/icons/repeat-2.svg"
+  },
+  {
+    "file": "settings/shield-check.svg",
+    "bytes": 410,
+    "source": "https://raw.githubusercontent.com/lucide-icons/lucide/main/icons/shield-check.svg"
+  },
+  {
+    "file": "settings/life-buoy.svg",
+    "bytes": 422,
+    "source": "https://raw.githubusercontent.com/lucide-icons/lucide/main/icons/life-buoy.svg"
+  },
+  {
+    "file": "settings/log-out.svg",
+    "bytes": 312,
+    "source": "https://raw.githubusercontent.com/lucide-icons/lucide/main/icons/log-out.svg"
+  },
+  {
+    "file": "settings/chevron-right.svg",
+    "bytes": 232,
+    "source": "https://raw.githubusercontent.com/lucide-icons/lucide/main/icons/chevron-right.svg"
+  },
+  {
+    "file": "settings/chevron-left.svg",
+    "bytes": 233,
+    "source": "https://raw.githubusercontent.com/lucide-icons/lucide/main/icons/chevron-left.svg"
+  },
+  {
+    "file": "settings/chart-no-axes-combined.svg",
+    "bytes": 427,
+    "source": "https://raw.githubusercontent.com/lucide-icons/lucide/main/icons/chart-no-axes-combined.svg"
+  },
+  {
+    "file": "settings/message-square.svg",
+    "bytes": 334,
+    "source": "https://raw.githubusercontent.com/lucide-icons/lucide/main/icons/message-square.svg"
+  },
+  {
+    "file": "settings/circle-check.svg",
+    "bytes": 273,
+    "source": "https://raw.githubusercontent.com/lucide-icons/lucide/main/icons/circle-check.svg"
+  },
+  {
+    "file": "settings/clock-3.svg",
+    "bytes": 264,
+    "source": "https://raw.githubusercontent.com/lucide-icons/lucide/main/icons/clock-3.svg"
+  },
+  {
+    "file": "settings/coins.svg",
+    "bytes": 356,
+    "source": "https://raw.githubusercontent.com/lucide-icons/lucide/main/icons/coins.svg"
+  },
+  {
+    "file": "settings/x.svg",
+    "bytes": 255,
+    "source": "https://raw.githubusercontent.com/lucide-icons/lucide/main/icons/x.svg"
+  },
+  {
+    "file": "settings/check.svg",
+    "bytes": 234,
+    "source": "https://raw.githubusercontent.com/lucide-icons/lucide/main/icons/check.svg"
+  },
+  {
+    "file": "settings/circle.svg",
+    "bytes": 239,
+    "source": "https://raw.githubusercontent.com/lucide-icons/lucide/main/icons/circle.svg"
+  },
+  {
+    "file": "settings/info.svg",
+    "bytes": 289,
+    "source": "https://raw.githubusercontent.com/lucide-icons/lucide/main/icons/info.svg"
+  },
+  {
+    "file": "settings/rotate-ccw.svg",
+    "bytes": 292,
+    "source": "https://raw.githubusercontent.com/lucide-icons/lucide/main/icons/rotate-ccw.svg"
+  },
+  {
+    "file": "settings/moon.svg",
+    "bytes": 329,
+    "source": "https://raw.githubusercontent.com/lucide-icons/lucide/main/icons/moon.svg"
+  },
+  {
+    "file": "settings/search.svg",
+    "bytes": 270,
+    "source": "https://raw.githubusercontent.com/lucide-icons/lucide/main/icons/search.svg"
+  },
+  {
+    "file": "settings/sun.svg",
+    "bytes": 480,
+    "source": "https://raw.githubusercontent.com/lucide-icons/lucide/main/icons/sun.svg"
+  },
+  {
+    "file": "settings/calendar-days.svg",
+    "bytes": 478,
+    "source": "https://raw.githubusercontent.com/lucide-icons/lucide/main/icons/calendar-days.svg"
+  },
+  {
+    "file": "settings/list-checks.svg",
+    "bytes": 331,
+    "source": "https://raw.githubusercontent.com/lucide-icons/lucide/main/icons/list-checks.svg"
+  },
+  {
+    "file": "providers/gmail.png",
+    "bytes": 1227,
+    "source": "https://www.gstatic.com/images/branding/product/2x/gmail_2020q4_48dp.png"
+  },
+  {
+    "file": "providers/google-calendar.png",
+    "bytes": 907,
+    "source": "https://www.gstatic.com/images/branding/product/2x/calendar_2020q4_48dp.png"
+  },
+  {
+    "file": "providers/google-drive.png",
+    "bytes": 2168,
+    "source": "https://www.gstatic.com/images/branding/product/2x/drive_2020q4_48dp.png"
+  },
+  {
+    "file": "providers/google-contacts.png",
+    "bytes": 1107,
+    "source": "https://www.gstatic.com/images/branding/product/2x/contacts_2022_48dp.png"
+  },
+  {
+    "file": "settings/LICENSE",
+    "bytes": 3208,
+    "source": "https://raw.githubusercontent.com/lucide-icons/lucide/main/LICENSE"
+  }
+]

@@ -9,6 +9,8 @@ export function GlassTabBar({ state, descriptors, emitter, navigateToTab, insets
     const [width, setWidth] = useState(0);
     const selected = useSharedValue(state.index);
     const tabWidth = width / state.routes.length;
+    const activeOptions = descriptors[state.routes[state.index].key].options;
+    const backgroundColor = StyleSheet.flatten(activeOptions.sceneStyle)?.backgroundColor ?? theme.background;
 
     useEffect(() => {
         selected.value = withTiming(state.index, {
@@ -24,6 +26,7 @@ export function GlassTabBar({ state, descriptors, emitter, navigateToTab, insets
 
     return (
         <View style={[styles.dock, {
+            backgroundColor,
             paddingBottom: Math.max(insets.bottom, 12),
             paddingLeft: insets.left + 18,
             paddingRight: insets.right + 18,
@@ -80,7 +83,6 @@ const styles = StyleSheet.create({
     dock: {
         alignItems: "center",
         paddingTop: 10,
-        backgroundColor: theme.background,
     },
     glass: {
         width: "100%",

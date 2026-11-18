@@ -60,3 +60,20 @@ the screen; its first message creates a separate conversation.
 
 The history UI displays saved messages. Passing earlier messages to the model
 is not implemented yet. A conversation picker is also not implemented yet.
+
+## Settings
+
+Settings includes account details, connected-source previews, Home summary
+preferences, quiet hours, daily routines, and activity/action preferences.
+The profile opens an account overview with explicitly labeled sample statistics
+for tokens, conversations, completed tasks, and pending tasks. These numbers are
+placeholders until a real account-statistics endpoint is available. Settings and
+its panels use bundled image icons; logo sources and utility-icon licensing are
+recorded in `assets/icons/`.
+Selections are saved on the device separately for each signed-in user. Reset
+preferences restores the defaults; signing out keeps conversations on the server.
+
+Source connections, notification delivery, and scheduled routines are marked as
+previews until their backend endpoints are implemented. Selecting these preferences
+does not connect a Google app, request push permissions, send an email, or start a
+routine. The Home notification feed and Activity timeline still need their own UI.

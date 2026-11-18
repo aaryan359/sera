@@ -1,5 +1,6 @@
 export const theme = {
     background: "#F7F7FB",
+    settingsBackground: "#EAF0ED",
     surface: "#FFFFFF",
     lavender: "#EEEDFB",
     peach: "#F7EEEA",
