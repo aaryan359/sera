@@ -1,56 +1,57 @@
-# Welcome to your Expo app 👋
+# Sera mobile app
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+React Native app built with Expo Router. The Assistant screen sends authenticated
+messages to the API, polls the task run, and renders the saved reply as Markdown.
 
-## Get started
+## Run with the local backend
 
-1. Install dependencies
-
-   ```bash
-   npm install
-   ```
-
-2. Start the app
-
-   ```bash
-   npx expo start
-   ```
-
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **src/app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
+From the repository root, run these in separate terminals:
 
 ```bash
-npm run reset-project
+npm run dev
 ```
 
-This command will move the starter code to the **example** directory and create a blank **src/app** directory where you can start developing.
+```bash
+npm run worker
+```
 
-### Other setup steps
+The API listens on port `3333`. The worker processes queued messages; both need
+access to the configured PostgreSQL database, and the worker needs `GROQ_API_KEY`.
+Web searches also need the configured SearXNG service.
 
-- To set up ESLint for linting, run `npx expo lint`, or follow our guide on ["Using ESLint and Prettier"](https://docs.expo.dev/guides/using-eslint/)
-- If you'd like to set up unit testing, follow our guide on ["Unit Testing with Jest"](https://docs.expo.dev/develop/unit-testing/)
-- Learn more about the TypeScript setup in this template in our guide on ["Using TypeScript"](https://docs.expo.dev/guides/typescript/)
+For an Android emulator or a device connected through ADB:
 
-## Learn more
+```bash
+adb reverse tcp:3333 tcp:3333
+```
 
-To learn more about developing your project with Expo, look at the following resources:
+Then start the mobile app from this directory:
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+```bash
+npx expo start
+```
 
-## Join the community
+Use a Sera development build for native Google sign-in. The app restores the saved
+session, or shows sign-in when no valid session is available. UI preview mode in
+`config/development.ts` is disabled for backend testing.
 
-Join our community of developers creating universal apps.
+## API address
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+The default is `http://localhost:3333`, which works on Android with the ADB port
+forward above. Repeat the forwarding command after reconnecting the device.
+
+For a device testing over Wi-Fi, set `EXPO_PUBLIC_API_URL` in the mobile `.env` to
+a reachable backend URL, then restart Metro. The Google Web client ID belongs in
+`EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID`; it must match the backend's `GOOGLE_CLIENT_ID`.
+
+## Chat behavior
+
+The first message creates a conversation and a run. Later messages use that same
+conversation. The app polls the run for its status and answer, pauses polling in
+the background, and resumes when active. A failed status check can be retried
+without submitting the message again. The new-chat button starts a separate
+conversation once the current request finishes.
+
+Conversation history restoration and passing earlier messages to the model are
+not implemented yet. Closing the app loses the screen's current conversation,
+but accepted requests and messages remain stored on the backend.

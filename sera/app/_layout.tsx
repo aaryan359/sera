@@ -54,10 +54,11 @@ function AppContent() {
                 screenOptions={{ headerShown: false }}
             >
                 <Stack.Screen name="index" />
-                <Stack.Protected guard={showTabs}>
+                {/* Avoid routing auth changes through the redirecting index screen. */}
+                <Stack.Protected guard={showTabs} redirectTo="/(auth)">
                     <Stack.Screen name="(tabs)" />
                 </Stack.Protected>
-                <Stack.Protected guard={!showTabs}>
+                <Stack.Protected guard={!showTabs} redirectTo="/(tabs)/home">
                     <Stack.Screen name="(auth)" />
                 </Stack.Protected>
 

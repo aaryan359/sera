@@ -51,7 +51,6 @@ export function useAuth() {
 
             await SecureStore.setItemAsync('authToken', session.data.token);
             useAuthStore.getState().setUser(session.data.user);
-            useAuthStore.getState().isAuthenticated = true;
 
             return session;
 

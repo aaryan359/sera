@@ -15,6 +15,8 @@ export class UserController {
 
     
     static async authenticate(req: Request, res: Response) {
+
+        console.log("Authenticating user with Google ID token...");
         
         res.set("Cache-Control", "no-store");
 

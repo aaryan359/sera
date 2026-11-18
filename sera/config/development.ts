@@ -1,2 +1,2 @@
-// Temporary tabs preview. Set to false when returning to the login flow.
-export const previewTabs = __DEV__;
+// Enable only when previewing screens without a backend session.
+export const previewTabs = false;
