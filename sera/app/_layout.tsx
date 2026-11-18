@@ -15,18 +15,15 @@ import { queryClient } from "../config/query-client";
 import { useAuthStore } from "../store/auth-store";
 import { restoreSession } from "../utils/auth-session";
 import { previewTabs } from "../config/development";
-
+import { GlassProvider } from "../components/ui/glass";
 
 SplashScreen.preventAutoHideAsync();
 
-
 function AppContent() {
-
-
-    const isAuthenticated = useAuthStore((state)=> ( state.isAuthenticated));
-    const isLoading = useAuthStore((state)=> ( state.isLoading)) && !previewTabs;
+    const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+    const isLoading = useAuthStore((state) => state.isLoading) && !previewTabs;
     const showTabs = previewTabs || isAuthenticated;
-    
+
     const [fontsLoaded, fontError] = useFonts({
         "Inter-Regular": Inter_400Regular,
         "Inter-Medium": Inter_500Medium,
@@ -50,9 +47,7 @@ function AppContent() {
 
     return (
         <View style={{ flex: 1 }}>
-            <Stack
-                screenOptions={{ headerShown: false }}
-            >
+            <Stack screenOptions={{ headerShown: false }}>
                 <Stack.Screen name="index" />
                 {/* Avoid routing auth changes through the redirecting index screen. */}
                 <Stack.Protected guard={showTabs} redirectTo="/(auth)">
@@ -61,15 +56,19 @@ function AppContent() {
                 <Stack.Protected guard={!showTabs} redirectTo="/(tabs)/home">
                     <Stack.Screen name="(auth)" />
                 </Stack.Protected>
-
             </Stack>
-            
+
             <AppToast />
         </View>
     );
 }
 
 export default function RootLayout() {
-    
-    return <QueryClientProvider client={queryClient}><AppContent /></QueryClientProvider>;
+    return (
+        <QueryClientProvider client={queryClient}>
+            <GlassProvider>
+                <AppContent />
+            </GlassProvider>
+        </QueryClientProvider>
+    );
 }

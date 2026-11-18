@@ -17,8 +17,12 @@ import { theme } from "../../../config/theme";
 import { ChatMessageBubble } from "../../../components/chat-message-bubble";
 import type { ChatMessage } from "../../../interfaces/chat";
 import { useChat } from "../../../hooks/useChat";
+import { useBottomTabBarHeight } from "expo-router/js-tabs";
+import { useKeyboardVisible } from "../../../hooks/useKeyboardVisible";
 
 export default function AssistantScreen() {
+    const tabBarHeight = useBottomTabBarHeight();
+    const keyboardVisible = useKeyboardVisible();
     const insets = useSafeAreaInsets();
 
     const list = useRef<FlatList<ChatMessage>>(null);
@@ -149,7 +153,12 @@ export default function AssistantScreen() {
                     }
                 />
 
-                <View style={styles.composerArea}>
+                <View
+                    style={[
+                        styles.composerArea,
+                        { paddingBottom: keyboardVisible ? 12 : tabBarHeight + 12 },
+                    ]}
+                >
                     <View style={styles.composer}>
                         <TextInput
                             accessibilityLabel="Message Sera"

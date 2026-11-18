@@ -19,6 +19,7 @@ import {
 import { useSettings } from "../../../hooks/useSettings";
 import { theme } from "../../../config/theme";
 import { useAuthStore } from "../../../store/auth-store";
+import { useBottomTabBarHeight } from "expo-router/js-tabs";
 
 type Panel = "stats" | "connectors" | "notifications" | "routines" | "quiet" | "activity" | "help";
 
@@ -134,6 +135,7 @@ function Group({ title, children }: { title: string; children: ReactNode }) {
 }
 
 export default function SettingsScreen() {
+    const tabBarHeight = useBottomTabBarHeight();
     const user = useAuthStore((state) => state.user);
     const queryClient = useQueryClient();
     const { preferences, update, isLoading, reset } = useSettings();
@@ -518,7 +520,7 @@ export default function SettingsScreen() {
         <SafeAreaView style={styles.screen} edges={["top", "left", "right"]}>
             <ScrollView
                 showsVerticalScrollIndicator={false}
-                contentContainerStyle={styles.content}
+                contentContainerStyle={[styles.content, { paddingBottom: tabBarHeight + 28 }]}
             >
                 <ScreenHeader title="Settings" />
 

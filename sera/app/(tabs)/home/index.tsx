@@ -2,6 +2,7 @@ import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-
 import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { useState } from "react";
+import { useBottomTabBarHeight } from "expo-router/js-tabs";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { ScreenHeader } from "../../../components/screen-header";
 import { SettingsIcon } from "../../../components/settings-icon";
@@ -58,6 +59,7 @@ const initialTasks: Task[] = [
 const categories = ["All Tasks", "Personal", "Work"] as const;
 
 export default function HomeScreen() {
+    const tabBarHeight = useBottomTabBarHeight();
     const user = useAuthStore((state) => state.user);
     const [tasks, setTasks] = useState(initialTasks);
     const [category, setCategory] = useState<(typeof categories)[number]>("All Tasks");
@@ -84,7 +86,7 @@ export default function HomeScreen() {
     return (
         <SafeAreaView style={styles.screen} edges={["top", "left", "right"]}>
             <ScrollView
-                contentContainerStyle={styles.content}
+                contentContainerStyle={[styles.content, { paddingBottom: tabBarHeight + 28 }]}
                 showsVerticalScrollIndicator={false}
                 keyboardShouldPersistTaps="handled"
             >
