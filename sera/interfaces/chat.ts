@@ -12,6 +12,23 @@ export interface SavedChatMessage {
     createdAt: string;
 }
 
+export interface ConversationSummary {
+    id: string;
+    title: string | null;
+    createdAt: string;
+    updatedAt: string;
+}
+
+export interface SavedConversation extends ConversationSummary {
+    messages: SavedChatMessage[];
+}
+
+export interface ConversationHistory {
+    conversation: SavedConversation;
+    nextCursor: string | null;
+    pendingRun: { id: string; status: RunStatus } | null;
+}
+
 export type RunStatus =
     | "QUEUED"
     | "PLANNING"

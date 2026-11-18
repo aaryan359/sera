@@ -52,6 +52,11 @@ the background, and resumes when active. A failed status check can be retried
 without submitting the message again. The new-chat button starts a separate
 conversation once the current request finishes.
 
-Conversation history restoration and passing earlier messages to the model are
-not implemented yet. Closing the app loses the screen's current conversation,
-but accepted requests and messages remain stored on the backend.
+Opening the Assistant restores the most recently updated conversation and its
+latest 20 messages. Use “Load older messages” for earlier pages. Pending replies
+resume polling after reopening. History reads are cached for 30 seconds per user
+and invalidated when sending a message or receiving its result. New chat clears
+the screen; its first message creates a separate conversation.
+
+The history UI displays saved messages. Passing earlier messages to the model
+is not implemented yet. A conversation picker is also not implemented yet.

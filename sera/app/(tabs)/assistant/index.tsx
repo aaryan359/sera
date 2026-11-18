@@ -20,13 +20,15 @@ import { useChat } from "../../../hooks/useChat";
 
 export default function AssistantScreen() {
     const insets = useSafeAreaInsets();
+
     const list = useRef<FlatList<ChatMessage>>(null);
     const followingLatest = useRef(true);
     const scrollFrame = useRef<number | null>(null);
     const input = useRef<ComponentRef<typeof TextInput>>(null);
     const chat = useChat();
+
     const [draft, setDraft] = useState("");
-    const [startedAt, setStartedAt] = useState(() => new Date());
+
     const canSend = draft.trim().length > 0 && !chat.isBusy;
 
     const scrollToLatest = useCallback(() => {
@@ -69,12 +71,11 @@ export default function AssistantScreen() {
                         onPress={() => {
                             chat.startNewChat();
                             followingLatest.current = true;
-                            setStartedAt(new Date());
                             setDraft("");
                             input.current?.focus();
                         }}
                     >
-                        <Ionicons name="chatbox-ellipses-outline" size={21} color="#8792DF" />
+                        <Ionicons name="add-outline" size={24} color="#8792DF" />
                     </Pressable>
                     <Text style={styles.headerTitle}>AI Assistant</Text>
                     <SeraLogo width={58} weight="semibold" />
@@ -98,24 +99,38 @@ export default function AssistantScreen() {
                     }}
                     scrollEventThrottle={16}
                     removeClippedSubviews={false}
+                    maintainVisibleContentPosition={{ minIndexForVisible: 0 }}
                     ListHeaderComponent={
-                        <Text style={styles.timestamp}>
-                            Today,{" "}
-                            {startedAt.toLocaleTimeString("en-US", {
-                                hour: "numeric",
-                                minute: "2-digit",
-                            })}
-                        </Text>
+                        <View>
+                            {chat.hasOlderMessages && (
+                                <Pressable
+                                    accessibilityRole="button"
+                                    disabled={chat.isBusy}
+                                    style={styles.retry}
+                                    onPress={() => {
+                                        followingLatest.current = false;
+                                        void chat.loadOlderMessages();
+                                    }}
+                                >
+                                    <Text style={styles.retryText}>
+                                        {chat.isLoadingOlder ? "Loading…" : "Load older messages"}
+                                    </Text>
+                                </Pressable>
+                            )}
+                            <Text style={styles.timestamp}>
+                                {chat.createdAt ? new Date(chat.createdAt).toLocaleString() : "New conversation"}
+                            </Text>
+                        </View>
                     }
                     renderItem={({ item }) => <ChatMessageBubble message={item} />}
                     ListEmptyComponent={
-                        <ChatMessageBubble
+                        !chat.isLoadingHistory && !chat.error ? <ChatMessageBubble
                             message={{
                                 id: "welcome",
                                 role: "assistant",
                                 text: "Hey! What can I help you with today?",
                             }}
-                        />
+                        /> : undefined
                     }
                     ListFooterComponent={
                         <View accessibilityLiveRegion="polite">
@@ -136,7 +151,9 @@ export default function AssistantScreen() {
                                     onPress={chat.checkAgain}
                                     style={styles.retry}
                                 >
-                                    <Text style={styles.retryText}>Check reply again</Text>
+                                    <Text style={styles.retryText}>
+                                        {chat.error && !chat.messages.length ? "Try again" : "Check reply again"}
+                                    </Text>
                                 </Pressable>
                             )}
                         </View>
