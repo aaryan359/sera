@@ -1,17 +1,34 @@
 import { Ionicons } from "@expo/vector-icons";
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { useEffect } from "react";
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Toast from "react-native-toast-message";
 import { theme } from "../../config/theme";
 import { SeraLogo } from "../../components/sera-logo";
+import { useAuth } from "../../hooks/useAuth";
+
 
 export default function AuthScreen() {
-    const handleGoogleSignIn = () => {
-        // Connect Google sign-in and the backend account lookup in the next step.
+
+    const { signInWithGoogle, isSigningIn, error } = useAuth();
+
+    useEffect(() => {
+        if (!error) return;
+
         Toast.show({
-            type: "info",
-            text1: "Google sign-in isn't connected yet",
-            text2: "Account creation and login will use this same button.",
+            type: "error",
+            text1: "Couldn't complete sign-in",
+            text2: error,
+        });
+    }, [error]);
+
+    const handleGoogleSignIn = async () => {
+        const result = await signInWithGoogle();
+        if (!result) return;
+
+        Toast.show({
+            type: "success",
+            text1: "Signed in",
         });
     };
 
@@ -32,11 +49,17 @@ export default function AuthScreen() {
                 <View style={styles.footer}>
                     <Pressable
                         accessibilityRole="button"
+                        accessibilityState={{ disabled: isSigningIn, busy: isSigningIn }}
+                        disabled={isSigningIn}
                         onPress={handleGoogleSignIn}
-                        style={({ pressed }) => [styles.button, { opacity: pressed ? 0.75 : 1 }]}
+                        style={({ pressed }) => [styles.button, { opacity: pressed || isSigningIn ? 0.75 : 1 }]}
                     >
-                        <Ionicons name="logo-google" size={20} color={theme.text} />
-                        <Text style={styles.buttonText}>Continue with Google</Text>
+                        {isSigningIn ? (
+                            <ActivityIndicator size="small" color={theme.text} />
+                        ) : (
+                            <Ionicons name="logo-google" size={20} color={theme.text} />
+                        )}
+                        <Text style={styles.buttonText}>{isSigningIn ? "Connecting…" : "Continue with Google"}</Text>
                     </Pressable>
                     <Text style={styles.caption}>
                         New here? Your account will be created automatically.
