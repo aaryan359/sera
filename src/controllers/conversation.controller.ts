@@ -1,4 +1,5 @@
 import type { Response } from "express";
+import { Prisma } from "@prisma/client";
 import { z } from "zod";
 import { MessageRole, RunStatus } from "../db/enums.ts";
 import { prisma } from "../db/prisma.ts";
@@ -219,11 +220,98 @@ export class ConversationController {
 
 
 
-    static deleteConversation(_req: AuthenticatedRequest, res: Response) {
-        ApiResponse.error(res, {
-            statusCode: 501,
-            message: "This endpoint is not implemented yet",
-            error: "NOT_IMPLEMENTED",
-        });
+    static async deleteConversation(req: AuthenticatedRequest, res: Response) {
+
+        const userId = req.user?.id;
+
+        if (!userId) {
+            ApiResponse.error(res, {
+                statusCode: 401,
+                message: "User is not authenticated",
+                error: "UNAUTHORIZED",
+            });
+            return;
+        }
+
+        const parsed = z.uuid().safeParse(req.params.conversationId);
+        if (!parsed.success) {
+            ApiResponse.error(res, {
+                statusCode: 400,
+                message: "Provide a valid conversation ID",
+                error: "INVALID_INPUT",
+            });
+            return;
+        }
+
+        const conversationId = parsed.data;
+        try {
+            const result = await prisma.$transaction(async (tx) => {
+                const conversation = await tx.conversation.findUnique({
+                    where: { id_userId: { id: conversationId, userId } },
+                    select: { id: true },
+                });
+                if (!conversation) return "NOT_FOUND";
+
+                // Don't remove work a worker may still execute, or unresolved outcomes.
+                const activeRun = await tx.run.findFirst({
+                    where: {
+                        conversationId,
+                        status: { notIn: [RunStatus.COMPLETED, RunStatus.FAILED, RunStatus.CANCELLED] },
+                    },
+                    select: { id: true },
+                });
+                if (activeRun) return "CONVERSATION_BUSY";
+
+                // These relations use ON DELETE RESTRICT: remove children before parents.
+                const run = { conversationId };
+                await tx.feedbackObservation.deleteMany({ where: { feedback: { trial: { run } } } });
+                await tx.reflection.deleteMany({ where: { feedback: { trial: { run } } } });
+                await tx.evaluationFeedback.deleteMany({ where: { trial: { run } } });
+                await tx.observation.deleteMany({ where: { toolCall: { run } } });
+                await tx.toolCall.deleteMany({ where: { run } });
+                await tx.actionExecution.deleteMany({ where: { approval: { run } } });
+                await tx.approval.deleteMany({ where: { run } });
+                await tx.trial.deleteMany({ where: { run } });
+                await tx.runConnection.deleteMany({ where: { run } });
+                await tx.runGoal.deleteMany({ where: { run } });
+                await tx.runEvent.deleteMany({ where: { run } });
+                await tx.runTransition.deleteMany({ where: { run } });
+                await tx.run.deleteMany({ where: { conversationId } });
+                await tx.message.deleteMany({ where: { conversationId } });
+                await tx.conversation.delete({
+                    where: { id_userId: { id: conversationId, userId } },
+                });
+                return "DELETED";
+            }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
+
+            if (result === "NOT_FOUND") {
+                ApiResponse.error(res, {
+                    statusCode: 404,
+                    message: "Conversation not found",
+                    error: result,
+                });
+            } else if (result === "CONVERSATION_BUSY") {
+                ApiResponse.error(res, {
+                    statusCode: 409,
+                    message: "Finish or cancel pending tasks and resolve uncertain outcomes before deleting this conversation",
+                    error: result,
+                });
+            } else {
+                ApiResponse.success(res, {
+                    message: "Conversation deleted successfully",
+                    data: { conversationId },
+                });
+            }
+        } catch (error) {
+            const conflict = error instanceof Prisma.PrismaClientKnownRequestError &&
+                ["P2034", "P2003", "P2025"].includes(error.code);
+            ApiResponse.error(res, {
+                statusCode: conflict ? 409 : 500,
+                message: conflict
+                    ? "Conversation changed while deleting. Please try again."
+                    : "Failed to delete conversation",
+                error: conflict ? "CONVERSATION_CHANGED" : "INTERNAL_SERVER_ERROR",
+            });
+        }
     }
 }
