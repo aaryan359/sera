@@ -31,6 +31,8 @@ export const extractToken = (req: Request) => {
     return null;
 };
 
+
+
 export const requireAuth = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     try {
         const token = extractToken(req);
@@ -81,6 +83,7 @@ export const requireAuth = async (req: AuthenticatedRequest, res: Response, next
 
         req.user = user;
         next();
+        
     } catch (error: any) {
         ApiResponse.error(res, {
             statusCode: 500,

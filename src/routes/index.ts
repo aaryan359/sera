@@ -14,7 +14,7 @@ import notificationSettingsRouter from "./notification-settings.routes.ts";
 
 const router = Router();
 
-// All routes below are mounted under /v1/api in server.ts.
+// All routes below are mounted under /api/v1 in server.ts.
 router.use("/auth", authRouter);
 router.use("/users", userRouter);
 router.use("/conversations", conversationRouter);

@@ -1,299 +1,107 @@
 import type { Request, Response } from "express";
 import { prisma } from "../db/prisma.ts";
 import ApiResponse from "../utils/ApiResponse.ts";
-import { resolveGoogleUserInfo, signJwtToken, verifyJwtToken } from "../utils/auth.ts";
-import { extractToken, type AuthenticatedRequest } from "../middleware/auth.middleware.ts";
+
+import type { AuthenticatedRequest } from "../middleware/auth.middleware.ts";
+import { z } from "zod";
+import { config } from "../config.ts";
+import { verifyGoogleIdToken } from "../utils/google-auth.ts";
+import { signJwtToken, type GoogleUserInfo } from "../utils/auth.ts";
+import { Prisma } from "@prisma/client";
+
+
 
 export class UserController {
+
     
-    
-    private static getAuthenticatedUserId(req: Request) {
-        const authReq = req as AuthenticatedRequest;
+    static async authenticate(req: Request, res: Response) {
+        
+        res.set("Cache-Control", "no-store");
 
-        if (authReq.user?.id) {
-            return authReq.user.id;
-        }
+        const parsed = z.object({
+            idToken: z.string().trim().min(1).max(20_000),
+        }).safeParse(req.body);
 
-        const token = extractToken(req);
-
-        if (!token) {
-            return null;
-        }
-
-        const payload = verifyJwtToken(token);
-
-        return payload?.userId || null;
-    }
-    
-
-    static async RegisterUser(req: Request, res: Response) {
-        try {
-            const body = req.body || {};
-            const googleUser = await resolveGoogleUserInfo(body);
-
-            // Check if user already exists with this email or Google subject
-            const existingUser = await prisma.user.findFirst({
-                where: {
-                    OR: [{ authSubject: googleUser.authSubject }, { email: googleUser.email }],
-                },
+        if (!parsed.success) {
+            ApiResponse.error(res, {
+                statusCode: 400,
+                message: "A Google ID token is required",
+                error: "INVALID_ID_TOKEN",
             });
+            return;
+        }
 
-            if (existingUser) {
-                ApiResponse.error(res, {
-                    statusCode: 409,
-                    message: "User with this email is already registered. Please log in.",
-                    error: "USER_ALREADY_EXISTS",
-                });
-                return;
-            }
+        if (!config.googleClientId.trim()) {
+            ApiResponse.error(res, {
+                statusCode: 500,
+                message: "Google login is not configured",
+                error: "GOOGLE_AUTH_NOT_CONFIGURED",
+            });
+            return;
+        }
 
-            const { timezone, locale } = body;
+        let googleUser: GoogleUserInfo;
 
-            const newUser = await prisma.user.create({
-                data: {
-                    email: googleUser.email,
-                    name: googleUser.name || null,
+        try {
+            googleUser = await verifyGoogleIdToken(parsed.data.idToken);
+        } catch {
+            ApiResponse.error(res, {
+                statusCode: 401,
+                message: "Google token is invalid or expired. Please sign in again.",
+                error: "GOOGLE_AUTH_FAILED",
+            });
+            return;
+        }
+
+        try {
+            // Google sub is the stable identity; do not silently link accounts by email.
+            const user = await prisma.user.upsert({
+                where: { authSubject: googleUser.authSubject },
+                create: {
                     authSubject: googleUser.authSubject,
-                    avatarUrl: googleUser.avatarUrl || null,
-                    timezone: timezone || "UTC",
-                    locale: locale || "en",
+                    email: googleUser.email,
+                    name: googleUser.name ?? null,
+                    avatarUrl: googleUser.avatarUrl ?? null,
+                },
+                update: {
+                    email: googleUser.email,
+                    ...(googleUser.name !== undefined ? { name: googleUser.name } : {}),
+                    ...(googleUser.avatarUrl !== undefined ? { avatarUrl: googleUser.avatarUrl } : {}),
                 },
                 select: {
                     id: true,
                     email: true,
                     name: true,
-                    authSubject: true,
+                    avatarUrl: true,
                     timezone: true,
                     locale: true,
-                    avatarUrl: true,
                     createdAt: true,
                     updatedAt: true,
                 },
             });
 
-            const token = signJwtToken({
-                userId: newUser.id,
-                email: newUser.email,
-            });
+            const token = signJwtToken({ userId: user.id, email: user.email });
 
             ApiResponse.success(res, {
-                statusCode: 201,
-                message: "User registered successfully with Google",
-                data: {
-                    user: newUser,
-                    token,
-                },
+                message: "Signed in with Google",
+                data: { user, token },
             });
-        } catch (error: any) {
+            
+        } catch (error) {
+            const conflict = error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002";
             ApiResponse.error(res, {
-                statusCode: 400,
-                message: error.message || "Failed to register user with Google",
-                error: error.message || "GOOGLE_REGISTER_ERROR",
+                statusCode: conflict ? 409 : 500,
+                message: conflict ? "This email is already linked to another account" : "Unable to complete sign-in",
+                error: conflict ? "ACCOUNT_CONFLICT" : "GOOGLE_LOGIN_ERROR",
             });
         }
     }
 
-    static async Login(req: Request, res: Response) {
+
+
+    static async checkAuth(req: AuthenticatedRequest, res: Response) {
         try {
-            const body = req.body || {};
-            const googleUser = await resolveGoogleUserInfo(body);
-
-            let user = await prisma.user.findFirst({
-                where: {
-                    OR: [{ authSubject: googleUser.authSubject }, { email: googleUser.email }],
-                },
-            });
-
-            if (!user) {
-                ApiResponse.error(res, {
-                    statusCode: 404,
-                    message: "No user found with this Google account. Please register first.",
-                    error: "USER_NOT_FOUND",
-                });
-                return;
-            }
-
-            // Keep authSubject and profile picture updated if Google provided them
-            user = await prisma.user.update({
-                where: { id: user.id },
-                data: {
-                    authSubject: user.authSubject || googleUser.authSubject || "",
-                    avatarUrl: googleUser.avatarUrl || user.avatarUrl || "",
-                    ...(user.name || googleUser.name ? { name: user.name || googleUser.name } : {}),
-                },
-            });
-
-            const token = signJwtToken({
-                userId: user.id,
-                email: user.email,
-            });
-
-            const {
-                id,
-                email,
-                name,
-                authSubject,
-                timezone,
-                locale,
-                avatarUrl,
-                createdAt,
-                updatedAt,
-            } = user;
-
-            ApiResponse.success(res, {
-                statusCode: 200,
-                message: "User logged in successfully with Google",
-                data: {
-                    user: {
-                        id,
-                        email,
-                        name,
-                        authSubject,
-                        timezone,
-                        locale,
-                        avatarUrl,
-                        createdAt,
-                        updatedAt,
-                    },
-                    token,
-                },
-            });
-        } catch (error: any) {
-            ApiResponse.error(res, {
-                statusCode: 400,
-                message: error.message || "Failed to login with Google",
-                error: error.message || "GOOGLE_LOGIN_ERROR",
-            });
-        }
-    }
-
-    static async updateUser(req: Request, res: Response) {
-        try {
-            const userId = UserController.getAuthenticatedUserId(req);
-
-            if (!userId) {
-                ApiResponse.error(res, {
-                    statusCode: 401,
-                    message: "Unauthorized: Missing or invalid authentication token",
-                    error: "UNAUTHORIZED",
-                });
-                return;
-            }
-
-            const body = req.body || {};
-            const { name, timezone, locale } = body;
-
-            const existingUser = await prisma.user.findUnique({
-                where: { id: userId },
-            });
-
-            if (!existingUser) {
-                ApiResponse.error(res, {
-                    statusCode: 404,
-                    message: "User not found",
-                    error: "USER_NOT_FOUND",
-                });
-                return;
-            }
-
-            const updatedUser = await prisma.user.update({
-                where: { id: userId },
-                data: {
-                    ...(name !== undefined ? { name } : {}),
-                    ...(timezone !== undefined ? { timezone } : {}),
-                    ...(locale !== undefined ? { locale } : {}),
-                },
-                select: {
-                    id: true,
-                    email: true,
-                    name: true,
-                    authSubject: true,
-                    timezone: true,
-                    locale: true,
-                    avatarUrl: true,
-                    createdAt: true,
-                    updatedAt: true,
-                },
-            });
-
-            ApiResponse.success(res, {
-                statusCode: 200,
-                message: "User profile updated successfully",
-                data: {
-                    user: updatedUser,
-                },
-            });
-        } catch (error: any) {
-            ApiResponse.error(res, {
-                statusCode: 500,
-                message: "Failed to update user profile",
-                error: error.message || "UPDATE_USER_ERROR",
-            });
-        }
-    }
-
-    static async updateProfilePicture(req: Request, res: Response) {
-        try {
-            const userId = UserController.getAuthenticatedUserId(req);
-
-            if (!userId) {
-                ApiResponse.error(res, {
-                    statusCode: 401,
-                    message: "Unauthorized: Missing or invalid authentication token",
-                    error: "UNAUTHORIZED",
-                });
-                return;
-            }
-
-            const body = req.body || {};
-            const avatarUrl = body.avatarUrl || body.picture || body.profilePicture;
-
-            if (!avatarUrl || typeof avatarUrl !== "string") {
-                ApiResponse.error(res, {
-                    statusCode: 400,
-                    message: "A valid avatarUrl or picture URL is required",
-                    error: "INVALID_PICTURE_URL",
-                });
-                return;
-            }
-
-            const updatedUser = await prisma.user.update({
-                where: { id: userId },
-                data: {
-                    avatarUrl,
-                },
-                select: {
-                    id: true,
-                    email: true,
-                    name: true,
-                    authSubject: true,
-                    timezone: true,
-                    locale: true,
-                    avatarUrl: true,
-                    createdAt: true,
-                    updatedAt: true,
-                },
-            });
-
-            ApiResponse.success(res, {
-                statusCode: 200,
-                message: "Profile picture updated successfully",
-                data: {
-                    user: updatedUser,
-                },
-            });
-        } catch (error: any) {
-            ApiResponse.error(res, {
-                statusCode: 500,
-                message: "Failed to update profile picture",
-                error: error.message || "UPDATE_PICTURE_ERROR",
-            });
-        }
-    }
-
-    static async checkAuth(req: Request, res: Response) {
-        try {
-            const userId = UserController.getAuthenticatedUserId(req);
+            const userId = req.user?.id;
 
             if (!userId) {
                 ApiResponse.error(res, {

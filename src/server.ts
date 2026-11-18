@@ -5,11 +5,13 @@ import router from "./routes/index.ts";
 import ApiResponse from "./utils/ApiResponse.ts";
 
 const app = express();
-const API_PREFIX = "/v1/api";
+const API_PREFIX = "/api/v1";
 
 app.use(cors());
 app.use(express.json({ limit: "1mb" }));
 app.use(express.urlencoded({ extended: false, limit: "1mb" }));
+
+
 
 app.get("/health", (_req, res) => {
     res.status(200).json({ status: "healthy" });
@@ -18,6 +20,8 @@ app.get("/health", (_req, res) => {
 app.get(API_PREFIX, (_req, res) => {
     ApiResponse.success(res, { message: "Sera API v1" });
 });
+
+
 
 app.use(API_PREFIX, router);
 

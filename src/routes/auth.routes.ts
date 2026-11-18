@@ -4,14 +4,14 @@ import { requireAuth } from "../middleware/auth.middleware.ts";
 
 const authRouter = Router();
 
-// /v1/api/auth
-authRouter.post("/register", UserController.RegisterUser);
-authRouter.post("/login", UserController.Login);
+// /api/v1/auth
 authRouter.get("/check-auth", requireAuth, UserController.checkAuth);
+// authRouter.post("/logout", requireAuth, UserController.LogoutUser);
 
-// Existing aliases kept for compatibility.
-authRouter.get("/verifyauth", requireAuth, UserController.checkAuth);
-authRouter.put("/update", requireAuth, UserController.updateUser);
-authRouter.put("/profile-picture", requireAuth, UserController.updateProfilePicture);
+authRouter.post("/authenticate", UserController.authenticate);
+
+
+
+
 
 export default authRouter;
