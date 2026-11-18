@@ -1,4 +1,4 @@
-import type { Request, Response } from "express";
+import type { Response } from "express";
 import { z } from "zod";
 import { MessageRole, RunStatus } from "../db/enums.ts";
 import { prisma } from "../db/prisma.ts";
@@ -6,8 +6,8 @@ import type { AuthenticatedRequest } from "../middleware/auth.middleware.ts";
 import ApiResponse from "../utils/ApiResponse.ts";
 
 export class ConversationController {
-    
-    
+
+
     static async startConversation(req: AuthenticatedRequest, res: Response) {
         const parsed = z
             .object({
@@ -25,7 +25,7 @@ export class ConversationController {
         }
 
         const data = await prisma.$transaction(async (tx) => {
-            
+
             const conversation = await tx.conversation.create({
                 data: {
                     userId: req.user!.id,
@@ -65,28 +65,87 @@ export class ConversationController {
 
 
 
+    static async getUserConversations(req: AuthenticatedRequest, res: Response) {
+        const parsed = z.object({
+            limit: z.coerce.number().int().min(1).max(50).default(20),
+        }).safeParse(req.query);
+        if (!parsed.success) {
+            ApiResponse.error(res, { statusCode: 400, message: "Provide a limit between 1 and 50" });
+            return;
+        }
 
-    static getUserConversations(_req: Request, res: Response) {
-        ApiResponse.error(res, {
-            statusCode: 501,
-            message: "This endpoint is not implemented yet",
-            error: "NOT_IMPLEMENTED",
+        const conversations = await prisma.conversation.findMany({
+            where: { userId: req.user!.id },
+            select: { id: true, title: true, createdAt: true, updatedAt: true },
+            orderBy: [{ updatedAt: "desc" }, { id: "desc" }],
+            take: parsed.data.limit,
         });
+        ApiResponse.success(res, { data: { conversations } });
     }
 
-    static getConversationById(_req: Request, res: Response) {
-        ApiResponse.error(res, {
-            statusCode: 501,
-            message: "This endpoint is not implemented yet",
-            error: "NOT_IMPLEMENTED",
-        });
-    }
+    static async getConversationById(req: AuthenticatedRequest, res: Response) {
+        const parsed = z.object({
+            conversationId: z.uuid(),
+            limit: z.coerce.number().int().min(1).max(50).default(20),
+            before: z.uuid().optional(),
+        }).safeParse({ ...req.query, conversationId: req.params.conversationId });
 
-    static getConversationMessages(_req: Request, res: Response) {
-        ApiResponse.error(res, {
-            statusCode: 501,
-            message: "This endpoint is not implemented yet",
-            error: "NOT_IMPLEMENTED",
+        if (!parsed.success) {
+            ApiResponse.error(res, { statusCode: 400, message: "Provide a valid conversation ID, message cursor, and limit (1–50)" });
+            return;
+        }
+
+        const { conversationId, limit, before } = parsed.data;
+
+        const conversation = await prisma.conversation.findUnique({
+            where: { id_userId: { id: conversationId, userId: req.user!.id } },
+            select: {
+                id: true, title: true, createdAt: true, updatedAt: true,
+                runs: {
+                    where: { status: { notIn: [RunStatus.COMPLETED, RunStatus.FAILED, RunStatus.CANCELLED, RunStatus.OUTCOME_UNKNOWN] } },
+                    orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+                    take: 1,
+                    select: { id: true, status: true },
+                },
+            },
+        });
+        if (!conversation) {
+            ApiResponse.error(res, { statusCode: 404, message: "Conversation not found", error: "NOT_FOUND" });
+            return;
+        }
+
+        // A cursor must belong to this conversation, not another user's history.
+        const cursor = before ? await prisma.message.findFirst({
+            where: { id: before, conversationId },
+            select: { id: true, createdAt: true },
+        }) : null;
+        if (before && !cursor) {
+            ApiResponse.error(res, { statusCode: 400, message: "Invalid message cursor" });
+            return;
+        }
+
+        const page = await prisma.message.findMany({
+            where: {
+                conversationId,
+                ...(cursor ? {
+                    OR: [
+                        { createdAt: { lt: cursor.createdAt } },
+                        { createdAt: cursor.createdAt, id: { lt: cursor.id } },
+                    ]
+                } : {}),
+            },
+            select: { id: true, role: true, content: true, createdAt: true },
+            orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+            take: limit + 1,
+        });
+        const messages = page.slice(0, limit).reverse();
+        const { runs, ...details } = conversation;
+        ApiResponse.success(res, {
+            data: {
+                conversation: { ...details, messages },
+                nextCursor: page.length > limit ? messages[0]!.id : null,
+                pendingRun: runs[0] ?? null,
+            }
         });
     }
 
@@ -130,6 +189,10 @@ export class ConversationController {
         }
 
         const data = await prisma.$transaction(async (tx) => {
+            await tx.conversation.update({
+                where: { id_userId: { id: conversationId, userId: req.user!.id } },
+                data: { updatedAt: new Date() },
+            });
             const savedMessage = await tx.message.create({
                 data: { conversationId, role: MessageRole.USER, content: message },
             });
@@ -154,7 +217,9 @@ export class ConversationController {
         });
     }
 
-    static deleteConversation(_req: Request, res: Response) {
+
+
+    static deleteConversation(_req: AuthenticatedRequest, res: Response) {
         ApiResponse.error(res, {
             statusCode: 501,
             message: "This endpoint is not implemented yet",
