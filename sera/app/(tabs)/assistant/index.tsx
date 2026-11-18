@@ -1,5 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
-import { useRef, useState, type ComponentRef } from "react";
+import { useCallback, useEffect, useRef, useState, type ComponentRef } from "react";
 import {
     ActivityIndicator,
     FlatList,
@@ -21,14 +21,33 @@ import { useChat } from "../../../hooks/useChat";
 export default function AssistantScreen() {
     const insets = useSafeAreaInsets();
     const list = useRef<FlatList<ChatMessage>>(null);
+    const followingLatest = useRef(true);
+    const scrollFrame = useRef<number | null>(null);
     const input = useRef<ComponentRef<typeof TextInput>>(null);
     const chat = useChat();
     const [draft, setDraft] = useState("");
     const [startedAt, setStartedAt] = useState(() => new Date());
     const canSend = draft.trim().length > 0 && !chat.isBusy;
 
+    const scrollToLatest = useCallback(() => {
+        if (!followingLatest.current) return;
+        if (scrollFrame.current !== null) cancelAnimationFrame(scrollFrame.current);
+        scrollFrame.current = requestAnimationFrame(() => {
+            scrollFrame.current = null;
+            if (followingLatest.current) list.current?.scrollToEnd({ animated: false });
+        });
+    }, []);
+
+    useEffect(
+        () => () => {
+            if (scrollFrame.current !== null) cancelAnimationFrame(scrollFrame.current);
+        },
+        [],
+    );
+
     const sendMessage = async () => {
         if (!canSend) return;
+        followingLatest.current = true;
         const sent = await chat.sendMessage(draft);
         if (sent) setDraft("");
     };
@@ -49,6 +68,7 @@ export default function AssistantScreen() {
                         style={[styles.newChat, chat.isBusy && styles.disabled]}
                         onPress={() => {
                             chat.startNewChat();
+                            followingLatest.current = true;
                             setStartedAt(new Date());
                             setDraft("");
                             input.current?.focus();
@@ -69,7 +89,15 @@ export default function AssistantScreen() {
                     keyboardDismissMode="on-drag"
                     showsVerticalScrollIndicator={false}
                     contentContainerStyle={styles.messages}
-                    onContentSizeChange={() => list.current?.scrollToEnd({ animated: false })}
+                    onContentSizeChange={scrollToLatest}
+                    onLayout={scrollToLatest}
+                    onScroll={({ nativeEvent }) => {
+                        const { contentOffset, contentSize, layoutMeasurement } = nativeEvent;
+                        followingLatest.current =
+                            contentSize.height - contentOffset.y - layoutMeasurement.height < 80;
+                    }}
+                    scrollEventThrottle={16}
+                    removeClippedSubviews={false}
                     ListHeaderComponent={
                         <Text style={styles.timestamp}>
                             Today,{" "}

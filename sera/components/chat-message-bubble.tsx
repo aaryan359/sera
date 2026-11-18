@@ -43,19 +43,26 @@ const rules: RenderRules = {
     ),
     // Wide tables and code scroll inside the bubble rather than stretching the chat.
     table: (node, children) => (
-        <ScrollView key={node.key} horizontal style={styles.wideBlock}>
+        <ScrollView
+            key={node.key}
+            horizontal
+            nestedScrollEnabled
+            directionalLockEnabled
+            style={styles.wideBlock}
+            contentContainerStyle={styles.wideContent}
+        >
             <View style={styles.table}>{children}</View>
         </ScrollView>
     ),
     fence: (node) => (
-        <ScrollView key={node.key} horizontal style={styles.codeBlock}>
+        <ScrollView key={node.key} horizontal nestedScrollEnabled style={styles.codeBlock} contentContainerStyle={styles.wideContent}>
             <Text selectable style={styles.code}>
                 {node.content.replace(/\n$/, "")}
             </Text>
         </ScrollView>
     ),
     code_block: (node) => (
-        <ScrollView key={node.key} horizontal style={styles.codeBlock}>
+        <ScrollView key={node.key} horizontal nestedScrollEnabled style={styles.codeBlock} contentContainerStyle={styles.wideContent}>
             <Text selectable style={styles.code}>
                 {node.content.replace(/\n$/, "")}
             </Text>
@@ -95,6 +102,7 @@ const styles = StyleSheet.create({
     bubble: {
         maxWidth: "94%",
         minWidth: 0,
+        flexShrink: 0,
         paddingHorizontal: 17,
         paddingVertical: 16,
         borderRadius: 20,
@@ -118,9 +126,11 @@ const styles = StyleSheet.create({
         color: "#F5F4F8",
         flexShrink: 1,
     },
-    wideBlock: { maxWidth: "100%", marginVertical: 8 },
+    // ScrollView grows by default; inside a message it must keep its content height.
+    wideBlock: { maxWidth: "100%", flexGrow: 0, flexShrink: 0, marginVertical: 8 },
+    wideContent: { alignItems: "flex-start" },
     table: { borderWidth: 1, borderColor: "#DDDCE8", borderRadius: 6, overflow: "hidden" },
-    codeBlock: { maxWidth: "100%", backgroundColor: "#F1F0F7", borderRadius: 8, marginVertical: 8 },
+    codeBlock: { maxWidth: "100%", flexGrow: 0, flexShrink: 0, backgroundColor: "#F1F0F7", borderRadius: 8, marginVertical: 8 },
     code: { fontFamily: monospace, fontSize: 12, lineHeight: 20, color: "#3E3D49", padding: 12 },
 });
 
@@ -157,8 +167,8 @@ const markdownStyles = StyleSheet.create({
     },
     bullet_list: { marginBottom: 8 },
     ordered_list: { marginBottom: 8 },
-    th: { minWidth: 120, padding: 8, backgroundColor: "#F1F0F7" },
-    td: { minWidth: 120, padding: 8 },
+    th: { width: 160, flex: 0, padding: 8, backgroundColor: "#F1F0F7" },
+    td: { width: 160, flex: 0, padding: 8 },
     tr: { borderBottomWidth: 1, borderColor: "#DDDCE8" },
     hr: { backgroundColor: "#DDDCE8", height: 1, marginVertical: 12 },
 });
