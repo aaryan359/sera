@@ -1,10 +1,10 @@
+import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
-import { router } from "expo-router";
 import { useState } from "react";
-import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { SeraLogo } from "../../../components/sera-logo";
+import { ScreenHeader } from "../../../components/screen-header";
+import { SettingsIcon } from "../../../components/settings-icon";
 import { theme } from "../../../config/theme";
 import { useAuthStore } from "../../../store/auth-store";
 
@@ -88,9 +88,8 @@ export default function HomeScreen() {
                 showsVerticalScrollIndicator={false}
                 keyboardShouldPersistTaps="handled"
             >
-                <View style={styles.toolbar}>
-                    <SeraLogo width={68} weight="semibold" />
-                    <View style={styles.actions}>
+                <ScreenHeader
+                    action={
                         <Pressable
                             accessibilityRole="button"
                             accessibilityLabel={searching ? "Close task search" : "Search tasks"}
@@ -100,25 +99,14 @@ export default function HomeScreen() {
                             }}
                             style={styles.iconButton}
                         >
-                            <Ionicons
-                                name={searching ? "close-outline" : "search-outline"}
+                            <SettingsIcon
+                                name={searching ? "close" : "search"}
                                 size={21}
                                 color={theme.text}
                             />
                         </Pressable>
-                        <Pressable
-                            accessibilityRole="button"
-                            accessibilityLabel="Open profile and settings"
-                            onPress={() => router.navigate("/(tabs)/settings")}
-                            style={styles.avatar}
-                        >
-                            <Text style={styles.initial}>
-                                {firstName?.[0]?.toUpperCase() ?? "S"}
-                            </Text>
-                            <View style={styles.onlineDot} />
-                        </Pressable>
-                    </View>
-                </View>
+                    }
+                />
 
                 <View style={styles.greeting}>
                     <Text style={styles.date}>
@@ -277,8 +265,6 @@ const styles = StyleSheet.create({
         paddingTop: 10,
         paddingBottom: 28,
     },
-    toolbar: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
-    actions: { flexDirection: "row", alignItems: "center", gap: 10 },
     iconButton: {
         width: 38,
         height: 38,
@@ -286,28 +272,6 @@ const styles = StyleSheet.create({
         backgroundColor: "#FFFFFFE6",
         alignItems: "center",
         justifyContent: "center",
-    },
-    avatar: {
-        width: 38,
-        height: 38,
-        borderRadius: 19,
-        borderWidth: 3,
-        borderColor: "#FFFFFF",
-        backgroundColor: "#DCD8CF",
-        alignItems: "center",
-        justifyContent: "center",
-    },
-    initial: { fontFamily: "Inter-SemiBold", fontSize: 14, color: "#6F685F" },
-    onlineDot: {
-        position: "absolute",
-        top: -2,
-        right: -2,
-        width: 8,
-        height: 8,
-        borderRadius: 4,
-        borderWidth: 1.5,
-        borderColor: "#F0F0FC",
-        backgroundColor: "#E9A489",
     },
     greeting: { marginTop: 42, marginBottom: 25 },
     date: { fontFamily: "Inter-Regular", fontSize: 12, color: "#858596", marginBottom: 8 },

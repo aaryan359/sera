@@ -1,18 +1,9 @@
+import { Switch, Pressable, Alert, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import { ScreenHeader } from "../../../components/screen-header";
 import { useQueryClient } from "@tanstack/react-query";
 import { Image } from "expo-image";
-import { router } from "expo-router";
 import * as SecureStore from "expo-secure-store";
 import { useState, type ReactNode } from "react";
-import {
-    Alert,
-    Pressable,
-    ScrollView,
-    StyleSheet,
-    Switch,
-    Text,
-    TextInput,
-    View,
-} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { SettingsIcon, type SettingsIconName } from "../../../components/settings-icon";
 import { SettingsSheet, type SettingsSheetContent } from "../../../components/settings-sheet";
@@ -191,13 +182,13 @@ export default function SettingsScreen() {
     ) {
         return (
             <Switch
+                trackColor={{ false: "#DEE5E0", true: "#A9C0AF" }}
+                thumbColor="#FFFFFF"
+                ios_backgroundColor="#DEE5E0"
                 accessibilityLabel={label}
                 value={preferences[key]}
                 disabled={isLoading}
                 onValueChange={(value) => update(key, value)}
-                trackColor={{ false: "#DEE5E0", true: "#A9C0AF" }}
-                thumbColor="#FFFFFF"
-                ios_backgroundColor="#DEE5E0"
             />
         );
     }
@@ -525,30 +516,11 @@ export default function SettingsScreen() {
 
     return (
         <SafeAreaView style={styles.screen} edges={["top", "left", "right"]}>
-            <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
-                <View style={styles.header}>
-                    <Pressable
-                        accessibilityRole="button"
-                        accessibilityLabel="Go back"
-                        style={styles.headerButton}
-                        onPress={() =>
-                            router.canGoBack() ? router.back() : router.navigate("/(tabs)/home")
-                        }
-                    >
-                        <SettingsIcon name="back" size={21} />
-                    </Pressable>
-                    <Text accessibilityRole="header" style={styles.title}>
-                        Settings
-                    </Text>
-                    <Pressable
-                        accessibilityRole="button"
-                        accessibilityLabel="View account statistics"
-                        style={styles.headerButton}
-                        onPress={() => setPanel("stats")}
-                    >
-                        <SettingsIcon name="stats" size={20} />
-                    </Pressable>
-                </View>
+            <ScrollView
+                showsVerticalScrollIndicator={false}
+                contentContainerStyle={styles.content}
+            >
+                <ScreenHeader title="Settings" />
 
                 <Pressable
                     accessibilityRole="button"
@@ -689,21 +661,6 @@ const styles = StyleSheet.create({
         paddingBottom: 28,
         gap: 23,
     },
-    header: {
-        flexDirection: "row",
-        alignItems: "center",
-        justifyContent: "space-between",
-        paddingBottom: 2,
-    },
-    headerButton: {
-        width: 39,
-        height: 39,
-        borderRadius: 20,
-        backgroundColor: "#FFFFFFE8",
-        alignItems: "center",
-        justifyContent: "center",
-    },
-    title: { fontFamily: "Inter-Medium", fontSize: 17, color: "#263D33", letterSpacing: -0.4 },
     profile: { flexDirection: "row", alignItems: "center", paddingVertical: 8, gap: 16 },
     profileDetails: { flex: 1, minWidth: 0, gap: 6 },
     avatar: {

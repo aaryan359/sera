@@ -1,18 +1,18 @@
-import { Ionicons } from "@expo/vector-icons";
-import { useCallback, useEffect, useRef, useState, type ComponentRef } from "react";
 import {
+    Pressable,
     ActivityIndicator,
     FlatList,
     KeyboardAvoidingView,
     Platform,
-    Pressable,
     StyleSheet,
     Text,
     TextInput,
     View,
 } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
-import { SeraLogo } from "../../../components/sera-logo";
+import { ScreenHeader } from "../../../components/screen-header";
 import { theme } from "../../../config/theme";
 import { ChatMessageBubble } from "../../../components/chat-message-bubble";
 import type { ChatMessage } from "../../../interfaces/chat";
@@ -24,7 +24,6 @@ export default function AssistantScreen() {
     const list = useRef<FlatList<ChatMessage>>(null);
     const followingLatest = useRef(true);
     const scrollFrame = useRef<number | null>(null);
-    const input = useRef<ComponentRef<typeof TextInput>>(null);
     const chat = useChat();
 
     const [draft, setDraft] = useState("");
@@ -62,23 +61,7 @@ export default function AssistantScreen() {
                 keyboardVerticalOffset={insets.top}
             >
                 <View style={styles.header}>
-                    <Pressable
-                        accessibilityRole="button"
-                        accessibilityLabel="Start a new conversation"
-                        disabled={chat.isBusy}
-                        accessibilityState={{ disabled: chat.isBusy }}
-                        style={[styles.newChat, chat.isBusy && styles.disabled]}
-                        onPress={() => {
-                            chat.startNewChat();
-                            followingLatest.current = true;
-                            setDraft("");
-                            input.current?.focus();
-                        }}
-                    >
-                        <Ionicons name="add-outline" size={24} color="#8792DF" />
-                    </Pressable>
-                    <Text style={styles.headerTitle}>AI Assistant</Text>
-                    <SeraLogo width={58} weight="semibold" />
+                    <ScreenHeader title="AI Assistant" />
                 </View>
 
                 <FlatList
@@ -118,19 +101,23 @@ export default function AssistantScreen() {
                                 </Pressable>
                             )}
                             <Text style={styles.timestamp}>
-                                {chat.createdAt ? new Date(chat.createdAt).toLocaleString() : "New conversation"}
+                                {chat.createdAt
+                                    ? new Date(chat.createdAt).toLocaleString()
+                                    : "New conversation"}
                             </Text>
                         </View>
                     }
                     renderItem={({ item }) => <ChatMessageBubble message={item} />}
                     ListEmptyComponent={
-                        !chat.isLoadingHistory && !chat.error ? <ChatMessageBubble
-                            message={{
-                                id: "welcome",
-                                role: "assistant",
-                                text: "Hey! What can I help you with today?",
-                            }}
-                        /> : undefined
+                        !chat.isLoadingHistory && !chat.error ? (
+                            <ChatMessageBubble
+                                message={{
+                                    id: "welcome",
+                                    role: "assistant",
+                                    text: "Hey! What can I help you with today?",
+                                }}
+                            />
+                        ) : undefined
                     }
                     ListFooterComponent={
                         <View accessibilityLiveRegion="polite">
@@ -152,7 +139,9 @@ export default function AssistantScreen() {
                                     style={styles.retry}
                                 >
                                     <Text style={styles.retryText}>
-                                        {chat.error && !chat.messages.length ? "Try again" : "Check reply again"}
+                                        {chat.error && !chat.messages.length
+                                            ? "Try again"
+                                            : "Check reply again"}
                                     </Text>
                                 </Pressable>
                             )}
@@ -163,7 +152,6 @@ export default function AssistantScreen() {
                 <View style={styles.composerArea}>
                     <View style={styles.composer}>
                         <TextInput
-                            ref={input}
                             accessibilityLabel="Message Sera"
                             placeholder="Message…"
                             placeholderTextColor="#A1A0AF"
@@ -211,21 +199,6 @@ const styles = StyleSheet.create({
         paddingBottom: 22,
         gap: 12,
     },
-    newChat: {
-        width: 40,
-        height: 40,
-        borderRadius: 20,
-        backgroundColor: "#FFFFFFD9",
-        alignItems: "center",
-        justifyContent: "center",
-    },
-    headerTitle: {
-        flex: 1,
-        textAlign: "center",
-        fontFamily: "Inter-Medium",
-        fontSize: 15,
-        color: theme.text,
-    },
     conversation: { flex: 1 },
     messages: { paddingHorizontal: 24, paddingBottom: 24, gap: 12 },
     timestamp: {
@@ -237,7 +210,6 @@ const styles = StyleSheet.create({
         marginBottom: 21,
     },
     status: { flexDirection: "row", alignItems: "center", gap: 8, marginTop: 12, paddingLeft: 3 },
-    disabled: { opacity: 0.45 },
     error: {
         fontFamily: "Inter-Regular",
         fontSize: 13,
