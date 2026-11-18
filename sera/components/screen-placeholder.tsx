@@ -8,7 +8,7 @@ export function ScreenPlaceholder({ title, subtitle }: { title: string; subtitle
         <SafeAreaView style={styles.screen} edges={["top", "left", "right"]}>
             <View style={styles.heading}>
                 <View style={styles.brand}>
-                    <SeraLogo width={80} />
+                    <SeraLogo width={80} weight="semibold" />
                 </View>
                 <Text style={styles.title}>{title}</Text>
                 <Text style={styles.subtitle}>{subtitle}</Text>
